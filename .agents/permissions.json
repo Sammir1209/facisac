@@ -1,0 +1,19 @@
+{
+  "$schema": "https://antigravity.google.com/schemas/permissions.json",
+  "permissions": {
+    "env": {
+      "allow": [
+        "SUNAT_RUC",
+        "SUNAT_USUARIO",
+        "SUNAT_CLAVE"
+      ]
+    },
+    "browser": {
+      "domains": [
+        "https://api-seguridad.sunat.gob.pe",
+        "https://sire.sunat.gob.pe"
+      ],
+      "allow_credential_autofill": true
+    }
+  }
+}

@@ -1,0 +1,1049 @@
+[
+  {
+    "ruc": "20602118640",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "5/9/2026, 2:06:30 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10481217020",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "4/9/2026, 1:40:57 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20404383940",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "4/9/2026, 1:12:35 p. m.",
+    "totalComprobantes": 12,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10009686652",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 8:56:45 a. m.",
+    "totalComprobantes": 40,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10176383360",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "2/9/2026, 11:22:30 p. m.",
+    "totalComprobantes": 3,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10009669910",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "2/9/2026, 11:23:13 p. m.",
+    "totalComprobantes": 28,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10422572932",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 8:18:07 a. m.",
+    "totalComprobantes": 1,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20615645266",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "4/9/2026, 1:39:12 p. m.",
+    "totalComprobantes": 23,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10463867041",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 8:24:22 a. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20607635162",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 8:56:04 a. m.",
+    "totalComprobantes": 15,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20613779401",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 8:58:24 a. m.",
+    "totalComprobantes": 374,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 2 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 82,
+        "bi": 9.5,
+        "igv": 1.72,
+        "documento": "F005"
+      }
+    ]
+  },
+  {
+    "ruc": "20615986632",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 9:09:00 a. m.",
+    "totalComprobantes": 8,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 2,
+        "bi": 516.78,
+        "igv": 93.02,
+        "documento": "FEXA"
+      }
+    ]
+  },
+  {
+    "ruc": "20607327816",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 9:10:42 a. m.",
+    "totalComprobantes": 36,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 2,
+        "bi": 482.22,
+        "igv": 86.79,
+        "documento": "F535"
+      }
+    ]
+  },
+  {
+    "ruc": "10405651764",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 9:31:25 a. m.",
+    "totalComprobantes": 76,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 12,
+        "bi": -5283.22,
+        "igv": -950.98,
+        "documento": "F001"
+      }
+    ]
+  },
+  {
+    "ruc": "10009717736",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 9:34:14 a. m.",
+    "totalComprobantes": 2,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10009743648",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:27:27 p. m.",
+    "totalComprobantes": 19,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10407286991",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:01:19 a. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10433737411",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:02:22 a. m.",
+    "totalComprobantes": 3,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10165393801",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:03:14 a. m.",
+    "totalComprobantes": 2,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10707887112",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:03:48 a. m.",
+    "totalComprobantes": 16,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10416731662",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:09:36 a. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20612175005",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:25:24 a. m.",
+    "totalComprobantes": 55,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20613704893",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "4/9/2026, 12:51:41 p. m.",
+    "totalComprobantes": 2,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20607090743",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "4/9/2026, 1:36:36 p. m.",
+    "totalComprobantes": 9,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20603927193",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:39:55 a. m.",
+    "totalComprobantes": 248,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 7 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 1,
+        "bi": 476,
+        "igv": 85.68,
+        "documento": "FE03"
+      },
+      {
+        "indiceFila": 1,
+        "bi": 476,
+        "igv": 85.68,
+        "documento": "FE03"
+      },
+      {
+        "indiceFila": 4,
+        "bi": 1066.78,
+        "igv": 192.02,
+        "documento": "F086"
+      },
+      {
+        "indiceFila": 8,
+        "bi": 132.2,
+        "igv": 23.8,
+        "documento": "F078"
+      },
+      {
+        "indiceFila": 16,
+        "bi": 228.55,
+        "igv": 41.15,
+        "documento": "F004"
+      },
+      {
+        "indiceFila": 20,
+        "bi": 1533.73,
+        "igv": 276.07,
+        "documento": "F086"
+      },
+      {
+        "indiceFila": 24,
+        "bi": 119.49,
+        "igv": 21.51,
+        "documento": "F078"
+      }
+    ]
+  },
+  {
+    "ruc": "20608254383",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:53:56 a. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10009917182",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 11:56:49 a. m.",
+    "totalComprobantes": 87,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 2 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 11,
+        "bi": 20.34,
+        "igv": 3.66,
+        "documento": "FA70"
+      },
+      {
+        "indiceFila": 26,
+        "bi": 203.98,
+        "igv": 36.72,
+        "documento": "F056"
+      }
+    ]
+  },
+  {
+    "ruc": "20493916093",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 5:45:46 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10421778014",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 5:46:47 p. m.",
+    "totalComprobantes": 4,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 1,
+        "bi": 3559.2,
+        "igv": 640.66,
+        "documento": "F001"
+      }
+    ]
+  },
+  {
+    "ruc": "20607411744",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 5:47:11 p. m.",
+    "totalComprobantes": 9,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 2 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 0,
+        "bi": 17.8,
+        "igv": 3.2,
+        "documento": "FF13"
+      },
+      {
+        "indiceFila": 1,
+        "bi": 24.58,
+        "igv": 4.42,
+        "documento": "FF13"
+      }
+    ]
+  },
+  {
+    "ruc": "10752500644",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 5:49:31 p. m.",
+    "totalComprobantes": 7,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10422730864",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:06:41 p. m.",
+    "totalComprobantes": 247,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 12 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 0,
+        "bi": 200.9,
+        "igv": 21.1,
+        "documento": "F002"
+      },
+      {
+        "indiceFila": 1,
+        "bi": 127.12,
+        "igv": 22.88,
+        "documento": "F090"
+      },
+      {
+        "indiceFila": 2,
+        "bi": 232.2,
+        "igv": 41.8,
+        "documento": "E001"
+      },
+      {
+        "indiceFila": 3,
+        "bi": 14.75,
+        "igv": 2.65,
+        "documento": "FB01"
+      },
+      {
+        "indiceFila": 4,
+        "bi": 14.75,
+        "igv": 2.65,
+        "documento": "FC01"
+      },
+      {
+        "indiceFila": 5,
+        "bi": 14.75,
+        "igv": 2.65,
+        "documento": "FD01"
+      },
+      {
+        "indiceFila": 6,
+        "bi": 594.71,
+        "igv": 107.05,
+        "documento": "FA01"
+      },
+      {
+        "indiceFila": 8,
+        "bi": 14.75,
+        "igv": 2.65,
+        "documento": "FF01"
+      },
+      {
+        "indiceFila": 9,
+        "bi": 14.75,
+        "igv": 2.65,
+        "documento": "FG02"
+      },
+      {
+        "indiceFila": 10,
+        "bi": 14.75,
+        "igv": 2.65,
+        "documento": "FH02"
+      },
+      {
+        "indiceFila": 14,
+        "bi": 353.56,
+        "igv": 63.64,
+        "documento": "F215"
+      },
+      {
+        "indiceFila": 16,
+        "bi": 1118.64,
+        "igv": 201.36,
+        "documento": "F001"
+      }
+    ]
+  },
+  {
+    "ruc": "20608064134",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:07:28 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10278513594",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:09:01 p. m.",
+    "totalComprobantes": 36,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 3 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 0,
+        "bi": 5531.25,
+        "igv": 995.62,
+        "documento": "F001"
+      },
+      {
+        "indiceFila": 1,
+        "bi": 83.9,
+        "igv": 15.1,
+        "documento": "F078"
+      },
+      {
+        "indiceFila": 4,
+        "bi": 138.13,
+        "igv": 24.87,
+        "documento": "F078"
+      }
+    ]
+  },
+  {
+    "ruc": "20614573024",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:11:33 p. m.",
+    "totalComprobantes": 147,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10009683475",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:13:22 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20606737395",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:14:35 p. m.",
+    "totalComprobantes": 6,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 1,
+        "bi": 0.85,
+        "igv": 0.15,
+        "documento": "F001"
+      }
+    ]
+  },
+  {
+    "ruc": "20609468875",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:16:14 p. m.",
+    "totalComprobantes": 1,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20600691806",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:21:11 p. m.",
+    "totalComprobantes": 988,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 12 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 15,
+        "bi": 114.41,
+        "igv": 20.59,
+        "documento": "F078"
+      },
+      {
+        "indiceFila": 16,
+        "bi": 3158.48,
+        "igv": 568.52,
+        "documento": "F003"
+      },
+      {
+        "indiceFila": 19,
+        "bi": 186.44,
+        "igv": 33.56,
+        "documento": "FA01"
+      },
+      {
+        "indiceFila": 27,
+        "bi": 1707.63,
+        "igv": 307.37,
+        "documento": "E001"
+      },
+      {
+        "indiceFila": 51,
+        "bi": 7357.64,
+        "igv": 1324.38,
+        "documento": "F035"
+      },
+      {
+        "indiceFila": 52,
+        "bi": 5237.5,
+        "igv": 942.75,
+        "documento": "F035"
+      },
+      {
+        "indiceFila": 55,
+        "bi": 1228.81,
+        "igv": 221.19,
+        "documento": "F004"
+      },
+      {
+        "indiceFila": 60,
+        "bi": 7956.25,
+        "igv": 1432.13,
+        "documento": "F001"
+      },
+      {
+        "indiceFila": 60,
+        "bi": 7956.25,
+        "igv": 1432.13,
+        "documento": "F001"
+      },
+      {
+        "indiceFila": 64,
+        "bi": 37972.65,
+        "igv": 6835.08,
+        "documento": "F021"
+      },
+      {
+        "indiceFila": 72,
+        "bi": 103.39,
+        "igv": 18.61,
+        "documento": "F078"
+      },
+      {
+        "indiceFila": 75,
+        "bi": 248.34,
+        "igv": 44.7,
+        "documento": "F001"
+      }
+    ]
+  },
+  {
+    "ruc": "20494121426",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:21:59 p. m.",
+    "totalComprobantes": 6,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20603462476",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:23:04 p. m.",
+    "totalComprobantes": 5,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10440784807",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:24:46 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20609533707",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:25:29 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20607473847",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:26:32 p. m.",
+    "totalComprobantes": 2,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 0,
+        "bi": 3244.07,
+        "igv": 583.93,
+        "documento": "E001"
+      }
+    ]
+  },
+  {
+    "ruc": "10445334788",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "4/9/2026, 1:34:11 p. m.",
+    "totalComprobantes": 12,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10277310118",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:27:34 p. m.",
+    "totalComprobantes": 7,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20606305908",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:27:41 p. m.",
+    "totalComprobantes": 0,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "20608508369",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:27:54 p. m.",
+    "totalComprobantes": 119,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "SIN_MODIFICACIONES",
+    "mensaje": "No requirió modificaciones (BI e IGV en 0.00 en todas las páginas)",
+    "comprobantesModificados": []
+  },
+  {
+    "ruc": "10761714878",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:29:02 p. m.",
+    "totalComprobantes": 24,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 2 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 0,
+        "bi": 1988.14,
+        "igv": 357.86,
+        "documento": "FFA1"
+      },
+      {
+        "indiceFila": 3,
+        "bi": 70.34,
+        "igv": 12.66,
+        "documento": "F002"
+      }
+    ]
+  },
+  {
+    "ruc": "20542244519",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 6:29:39 p. m.",
+    "totalComprobantes": 384,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 3 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 64,
+        "bi": -291.22,
+        "igv": -52.42,
+        "documento": "FF02"
+      },
+      {
+        "indiceFila": 86,
+        "bi": 483.05,
+        "igv": 86.95,
+        "documento": "F003"
+      },
+      {
+        "indiceFila": 94,
+        "bi": 200,
+        "igv": 36,
+        "documento": "F001"
+      }
+    ]
+  },
+  {
+    "ruc": "10763376538",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 7:28:36 p. m.",
+    "totalComprobantes": 4,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 1 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 1,
+        "bi": 2444.92,
+        "igv": 440.08,
+        "documento": "E001"
+      }
+    ]
+  },
+  {
+    "ruc": "20615649491",
+    "periodo": {
+      "anio": "2026",
+      "mes": "AGO"
+    },
+    "fechaHora": "3/9/2026, 7:32:24 p. m.",
+    "totalComprobantes": 117,
+    "avisoSunat": "Modificación de propuesta RCE",
+    "estado": "MODIFICADO_EXITOSO",
+    "mensaje": "Se modificaron exitosamente 8 comprobante(s) en 1 página(s)",
+    "comprobantesModificados": [
+      {
+        "indiceFila": 0,
+        "bi": 205.93,
+        "igv": 37.07,
+        "documento": "F001"
+      },
+      {
+        "indiceFila": 3,
+        "bi": 277.12,
+        "igv": 49.88,
+        "documento": "FF13"
+      },
+      {
+        "indiceFila": 4,
+        "bi": 722.88,
+        "igv": 130.12,
+        "documento": "E001"
+      },
+      {
+        "indiceFila": 5,
+        "bi": 615.25,
+        "igv": 110.75,
+        "documento": "E001"
+      },
+      {
+        "indiceFila": 6,
+        "bi": 22.03,
+        "igv": 3.97,
+        "documento": "FF13"
+      },
+      {
+        "indiceFila": 7,
+        "bi": -205.93,
+        "igv": -37.07,
+        "documento": "F001"
+      },
+      {
+        "indiceFila": 8,
+        "bi": 504.34,
+        "igv": 90.78,
+        "documento": "F001"
+      },
+      {
+        "indiceFila": 12,
+        "bi": 53.91,
+        "igv": 0.59,
+        "documento": "FQAD"
+      }
+    ]
+  }
+]
