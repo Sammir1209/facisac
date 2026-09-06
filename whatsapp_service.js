@@ -4,11 +4,13 @@
  * Permite emparejar por código QR en pantalla web y despachar reportes y alertas a Grupos de WhatsApp.
  */
 
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
+
+// Variables para módulos dinámicos ESM de Baileys
+let makeWASocket, useMultiFileAuthState, DisconnectReason;
 
 const AUTH_DIR = path.join(__dirname, 'auth_whatsapp');
 const CONFIG_FILE = path.join(__dirname, 'whatsapp_config.json');
@@ -63,6 +65,14 @@ class WhatsAppService {
     this.isConnecting = true;
 
     try {
+      // Import dinámico de Baileys (módulo ESM compatible en Linux/Docker)
+      if (!makeWASocket) {
+        const baileysModule = await import('@whiskeysockets/baileys');
+        makeWASocket = baileysModule.default?.default || baileysModule.default || baileysModule.makeWASocket;
+        useMultiFileAuthState = baileysModule.useMultiFileAuthState;
+        DisconnectReason = baileysModule.DisconnectReason;
+      }
+
       if (!fs.existsSync(AUTH_DIR)) {
         fs.mkdirSync(AUTH_DIR, { recursive: true });
       }
