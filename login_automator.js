@@ -220,6 +220,8 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
     } catch (e) {}
   });
 
+  let registroFinal = null;
+
   try {
     // ==========================================
     // FASE 1: AUTENTICACIÓN VELOZ
@@ -1171,7 +1173,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
       }
 
       // Estructura de resultado para el archivo .json
-      const registroFinal = {
+      registroFinal = {
         ruc,
         periodo: {
           anio: anio || '2026',
@@ -1293,10 +1295,10 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
 
     return { 
       success: true, 
-      message: registroFinal.mensaje || "Proceso completado y ventana cerrada exitosamente", 
-      estado: registroFinal.estado || 'SIN_MODIFICACIONES',
-      totalComprobantes: registroFinal.totalComprobantes || 0,
-      comprobantesModificados: registroFinal.comprobantesModificados || [],
+      message: registroFinal?.mensaje || "Proceso completado y ventana cerrada exitosamente", 
+      estado: registroFinal?.estado || 'SIN_MODIFICACIONES',
+      totalComprobantes: registroFinal?.totalComprobantes || 0,
+      comprobantesModificados: registroFinal?.comprobantesModificados || [],
       screenshot: screenshotBase64 ? `data:image/png;base64,${screenshotBase64}` : null
     };
 
