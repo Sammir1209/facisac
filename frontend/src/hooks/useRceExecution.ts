@@ -2,8 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { Cliente } from '@/types';
-
-const API_BASE = 'http://localhost:3000';
+import { API_BASE } from '@/lib/apiConfig';
 
 export function useRceExecution() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);

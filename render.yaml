@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: backend-facisac
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: standard
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HEADLESS
+        value: "true"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE
+        sync: false

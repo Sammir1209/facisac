@@ -9,7 +9,7 @@ const { whatsAppService } = require('./whatsapp_service');
 const { auditExporter } = require('./audit_exporter');
 const { supabase } = require('./supabase_client');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const RESULTS_FILE = path.join(__dirname, 'registro_rce_resultados.json');
 
 // Iniciar WhatsApp Service en segundo plano

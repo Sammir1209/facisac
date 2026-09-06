@@ -18,6 +18,7 @@ import { useRceExecution } from '@/hooks/useRceExecution';
 import { calcularVencimientoSunat } from '@/lib/sunatSchedule';
 import { Cliente } from '@/types';
 import { Loader2, AlertCircle, LayoutGrid, Calendar as CalendarIcon } from 'lucide-react';
+import { API_BASE } from '@/lib/apiConfig';
 
 export default function DashboardPage() {
   // Estado de clientes y backend
@@ -80,7 +81,7 @@ export default function DashboardPage() {
         claveSol: c.clave
       }));
 
-      const res = await fetch('http://localhost:3000/api/sunat/fast-check', {
+      const res = await fetch(`${API_BASE}/api/sunat/fast-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientes: payload })
@@ -200,7 +201,7 @@ export default function DashboardPage() {
 
   // Descarga del reporte Excel
   const handleExportExcel = () => {
-    window.open('http://localhost:3000/api/rce/export-excel', '_blank');
+    window.open(`${API_BASE}/api/rce/export-excel`, '_blank');
   };
 
   // Disparar ejecución para los clientes seleccionados o filtrados

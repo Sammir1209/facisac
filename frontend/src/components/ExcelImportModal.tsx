@@ -4,6 +4,8 @@ import React, { useState, useRef } from 'react';
 import { X, UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { Cliente } from '@/types';
 
+import { API_BASE } from '@/lib/apiConfig';
+
 interface ExcelImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,7 +37,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
     try {
       const buffer = await file.arrayBuffer();
-      const res = await fetch('http://localhost:3000/api/excel/upload-parse', {
+      const res = await fetch(`${API_BASE}/api/excel/upload-parse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
         body: buffer,

@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Smartphone
 } from 'lucide-react';
+import { API_BASE } from '@/lib/apiConfig';
 
 interface WhatsAppModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
   // Consultar estado de WhatsApp
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/whatsapp/status');
+      const res = await fetch(`${API_BASE}/api/whatsapp/status`);
       const json = await res.json();
       if (json.success && json.data) {
         setIsConnected(json.data.isConnected);
@@ -63,7 +64,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
   const fetchGroups = async () => {
     setLoadingGroups(true);
     try {
-      const res = await fetch('http://localhost:3000/api/whatsapp/groups');
+      const res = await fetch(`${API_BASE}/api/whatsapp/groups`);
       const json = await res.json();
       if (json.success && Array.isArray(json.groups)) {
         setGroups(json.groups);
@@ -78,7 +79,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
   // Seleccionar grupo destino
   const handleSelectGroup = async (group: GroupInfo) => {
     try {
-      const res = await fetch('http://localhost:3000/api/whatsapp/select-group', {
+      const res = await fetch(`${API_BASE}/api/whatsapp/select-group`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupId: group.id, groupName: group.name })
@@ -99,7 +100,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
     setSendingTest(true);
     setTestResult(null);
     try {
-      const res = await fetch('http://localhost:3000/api/whatsapp/test-message', {
+      const res = await fetch(`${API_BASE}/api/whatsapp/test-message`, {
         method: 'POST'
       });
       const json = await res.json();
@@ -119,7 +120,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
   const handleDisconnect = async () => {
     if (!confirm('¿Deseas desvincular este WhatsApp del panel?')) return;
     try {
-      await fetch('http://localhost:3000/api/whatsapp/disconnect', { method: 'POST' });
+      await fetch(`${API_BASE}/api/whatsapp/disconnect`, { method: 'POST' });
       setIsConnected(false);
       setSelectedGroupId(null);
       setSelectedGroupName(null);

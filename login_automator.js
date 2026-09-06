@@ -142,21 +142,31 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
   if (abortSignal && abortSignal.aborted) {
     throw new Error("Tarea cancelada antes de iniciar.");
   }
-  onLog(`Abriendo ventana limpia de Google Chrome para RUC: ${ruc}...`);
+  const isHeadless = process.env.HEADLESS === 'true' || process.platform === 'linux';
+  onLog(`Abriendo Google Chrome (${isHeadless ? 'Modo Headless Cloud' : 'Modo Visible'}) para RUC: ${ruc}...`);
 
   let browser;
+  const launchArgs = [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--window-position=0,0'
+  ];
+  if (!isHeadless) {
+    launchArgs.push('--start-maximized', '--new-window');
+  }
+
   try {
     browser = await chromium.launch({
-      headless: false,
-      channel: 'chrome',
-      slowMo: 15, // MODO TURBO: 15ms de latencia para máxima velocidad visible
-      args: ['--start-maximized', '--new-window', '--window-position=0,0']
+      headless: isHeadless,
+      slowMo: isHeadless ? 0 : 15,
+      args: launchArgs
     });
   } catch (err) {
     browser = await chromium.launch({
-      headless: false,
-      slowMo: 15,
-      args: ['--start-maximized', '--new-window', '--window-position=0,0']
+      headless: isHeadless,
+      args: launchArgs
     });
   }
 

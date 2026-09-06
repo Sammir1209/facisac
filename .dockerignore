@@ -1,0 +1,7 @@
+node_modules
+.git
+frontend
+.env
+auth_whatsapp
+*.log
+scratch/
