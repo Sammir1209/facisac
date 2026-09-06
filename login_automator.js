@@ -183,8 +183,31 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
   }
 
   const context = await browser.newContext({
-    viewport: null,
+    viewport: { width: 1280, height: 800 },
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+  });
+
+  // ACELERADOR TURBO: Bloqueo de recursos pesados innecesarios (imágenes pesadas, videos, tracking)
+  // Acelera la carga de SUNAT hasta 3x veces en servidores cloud
+  await context.route('**/*', (route) => {
+    const resourceType = route.request().resourceType();
+    const url = route.request().url().toLowerCase();
+    
+    // Permitir scripts, stylesheets, documentos, fetch y xhr que SUNAT necesita
+    if (['media', 'font'].includes(resourceType) || 
+        url.includes('google-analytics') || 
+        url.includes('googletagmanager') || 
+        url.includes('facebook') ||
+        url.endsWith('.png') && !url.includes('captcha') && !url.includes('sol') ||
+        url.endsWith('.jpg') || 
+        url.endsWith('.jpeg') || 
+        url.endsWith('.gif') ||
+        url.endsWith('.woff') ||
+        url.endsWith('.woff2') ||
+        url.endsWith('.ttf')) {
+      return route.abort();
+    }
+    return route.continue();
   });
 
   const page = await context.newPage();
@@ -634,10 +657,10 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
 
       await btnAceptar.click({ force: true });
       onLog("✅ Periodo aceptado.");
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(300);
 
       // Limpiar posibles modales emergentes tras presionar Aceptar
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 2; i++) {
         for (const f of [page, ...page.frames()]) {
           await f.evaluate(() => {
             const btns = Array.from(document.querySelectorAll('button, a'));
@@ -651,7 +674,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
           }).catch(() => {});
         }
         await page.keyboard.press("Escape").catch(() => {});
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(200);
       }
 
       // 6. Navegar a la pestaña 'Propuesta del RCE' (a[href*="propuesta-rce"])
@@ -673,14 +696,14 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
         }
 
         const tabPropuestaRce = targetFrame.locator(`a[href*="propuesta-rce"], a:has-text("Propuesta del RCE"), //a[contains(normalize-space(.),'Propuesta del RCE')]`).first();
-        if (await tabPropuestaRce.isVisible({ timeout: 1000 }).catch(() => false)) {
+        if (await tabPropuestaRce.isVisible({ timeout: 500 }).catch(() => false)) {
           await tabPropuestaRce.click({ force: true }).catch(() => {});
         }
 
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(500);
 
         // Comprobar si la pestaña Propuesta del RCE ya quedó activa
-        const tabActiva = await targetFrame.locator("a[href*='propuesta-rce'].active, .nav-link.active:has-text('Propuesta del RCE'), .active:has-text('Propuesta del RCE')").first().isVisible({ timeout: 800 }).catch(() => false);
+        const tabActiva = await targetFrame.locator("a[href*='propuesta-rce'].active, .nav-link.active:has-text('Propuesta del RCE'), .active:has-text('Propuesta del RCE')").first().isVisible({ timeout: 400 }).catch(() => false);
         if (tabActiva) {
           onLog("✅ Pestaña 'Propuesta del RCE' verificada y activa.");
           break;
@@ -688,7 +711,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
       }
 
       onLog("Pestaña 'Propuesta del RCE' seleccionada.");
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(500);
 
       // =========================================================================
       // FASE 3: LÓGICA DE NEGOCIO (RCE_Data_Shifter) A MÁXIMA VELOCIDAD (100 EN 100)
