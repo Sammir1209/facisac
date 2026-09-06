@@ -225,18 +225,26 @@ class QueueManager {
           else console.log(`[SUPABASE] Auditoría de ${job.cliente.ruc} sincronizada en la nube.`);
         }).catch(() => {});
 
-        // Enviar notificación limpia y ejecutiva a Grupo de WhatsApp
-        const estadoCorto = resultado.estado === 'SIN_MODIFICACIONES' 
-          ? 'OK (0.00 verificado)' 
-          : resultado.estado === 'MODIFICADO_EXITOSO' 
-          ? `AJUSTADO A 0.00 (${resultado.comprobantesModificados?.length || 0} comprobantes)`
-          : resultado.estado;
+        // Enviar notificación limpia y ejecutiva a Grupo de WhatsApp con hora Perú (America/Lima)
+        let estadoLegible = 'Libros Modificados';
+        if (resultado && (resultado.estado === 'SIN_MODIFICACIONES' || resultado.estado === 'EN_CERO')) {
+          estadoLegible = 'Libros Verificados (0.00)';
+        } else if (resultado && resultado.estado === 'MODIFICADO_EXITOSO') {
+          estadoLegible = `Libros Modificados (${resultado.comprobantesModificados?.length || 1} comprobante(s) ajustados a 0.00)`;
+        }
+
+        const horaPeru = new Date().toLocaleTimeString('es-PE', { 
+          timeZone: 'America/Lima', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true
+        });
 
         const mensajeWa = `*RCE SUNAT: ${job.cliente.ruc}*\n` +
           `${job.cliente.razonSocial}\n` +
           `• *Periodo:* ${job.cliente.mes || 'Agosto'} ${job.cliente.anio || '2026'}\n` +
-          `• *Estado:* ${estadoCorto}\n` +
-          `• *Hora:* ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`;
+          `• *Estado:* ${estadoLegible}\n` +
+          `• *Hora:* ${horaPeru}`;
 
         whatsAppService.sendGroupMessage(mensajeWa).catch(() => {});
       }
@@ -249,11 +257,18 @@ class QueueManager {
         // Registrar fallo en Circuit Breaker
         circuitBreaker.recordFailure(err);
 
+        const horaPeruError = new Date().toLocaleTimeString('es-PE', { 
+          timeZone: 'America/Lima', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true
+        });
+
         // Notificar incidencia de forma concisa al Grupo
         const mensajeErrorWa = `*ALERTA SUNAT: ${job.cliente.ruc}*\n` +
           `${job.cliente.razonSocial || 'EMPRESA'}\n` +
           `• *Incidencia:* ${err.message.substring(0, 100)}\n` +
-          `• *Hora:* ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`;
+          `• *Hora:* ${horaPeruError}`;
 
         whatsAppService.sendGroupMessage(mensajeErrorWa).catch(() => {});
       }

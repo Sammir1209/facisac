@@ -810,7 +810,13 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
         await page.close().catch(() => {});
         await browser.close().catch(() => {});
         onLog("✅ Proceso completado exitosamente sin iteraciones innecesarias.");
-        return { success: true, message: "Totales en 0.00 confirmados. Sesión finalizada." };
+        return { 
+          success: true, 
+          estado: 'SIN_MODIFICACIONES',
+          totalComprobantes: 0,
+          comprobantesModificados: [],
+          message: "Totales en 0.00 confirmados. Sesión finalizada." 
+        };
       }
 
       onLog("➡️ Totales con saldo detectados o verificación por página requerida. Configurando tabla en modo 100 registros por página...");
@@ -1287,7 +1293,10 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
 
     return { 
       success: true, 
-      message: "Proceso completado y ventana cerrada exitosamente", 
+      message: registroFinal.mensaje || "Proceso completado y ventana cerrada exitosamente", 
+      estado: registroFinal.estado || 'SIN_MODIFICACIONES',
+      totalComprobantes: registroFinal.totalComprobantes || 0,
+      comprobantesModificados: registroFinal.comprobantesModificados || [],
       screenshot: screenshotBase64 ? `data:image/png;base64,${screenshotBase64}` : null
     };
 
