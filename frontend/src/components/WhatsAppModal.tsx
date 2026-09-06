@@ -49,7 +49,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
         setSelectedGroupId(json.data.selectedGroupId);
         setSelectedGroupName(json.data.selectedGroupName);
 
-        if (json.data.isConnected && groups.length === 0) {
+        if (json.data.isConnected) {
           fetchGroups();
         }
       }
@@ -58,7 +58,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
     } finally {
       setLoading(false);
     }
-  }, [groups.length]);
+  }, []);
 
   // Listar grupos disponibles
   const fetchGroups = async () => {
@@ -137,7 +137,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
     fetchStatus();
     const timer = setInterval(() => {
       fetchStatus();
-    }, 3000);
+    }, 2500);
     return () => clearInterval(timer);
   }, [isOpen, fetchStatus]);
 
