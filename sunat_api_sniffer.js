@@ -27,21 +27,26 @@ class SunatApiSniffer {
   }
 
   /**
-   * Conecta el interceptor a una página de Playwright
+   * Conecta el interceptor a un contexto o página de Playwright
    */
-  attach(page, onLog = console.log) {
-    page.on('request', (request) => {
+  attach(target, onLog = console.log) {
+    const handleRequest = (request) => {
       const url = request.url();
       const method = request.method();
 
-      // Interceptar endpoints de API SIRE, OAuth o e-menu
-      if (url.includes('api-sire') || url.includes('/mige/') || url.includes('/rce/') || url.includes('e-menu') || url.includes('clientessol')) {
+      // Interceptar todo el tráfico con SUNAT (api-sire, mige, rce, e-menu, sunat.gob.pe)
+      if (url.includes('sunat.gob.pe')) {
         const headers = request.headers();
         const authHeader = headers['authorization'] || headers['Authorization'];
         
         if (authHeader && authHeader.startsWith('Bearer ')) {
           this.sessionTokens.bearerToken = authHeader;
-          onLog(`[SNIFFER] 🎯 Bearer Token de API SIRE capturado: ${authHeader.substring(0, 25)}...`);
+          onLog(`[SNIFFER] 🎯 Bearer Token capturado: ${authHeader.substring(0, 30)}...`);
+        }
+
+        const cookieHeader = headers['cookie'] || headers['Cookie'];
+        if (cookieHeader) {
+          this.sessionTokens.cookies = cookieHeader;
         }
 
         const postData = request.postData();
@@ -55,20 +60,19 @@ class SunatApiSniffer {
 
         this.capturedRequests.push(reqRecord);
       }
-    });
+    };
 
-    page.on('response', async (response) => {
+    const handleResponse = async (response) => {
       const url = response.url();
       const status = response.status();
 
-      // Interceptar respuestas JSON clave del SIRE
-      if ((url.includes('/rce/') || url.includes('/propuesta') || url.includes('/mige/')) && status === 200) {
+      if (url.includes('sunat.gob.pe') && status === 200) {
         try {
           const contentType = response.headers()['content-type'] || '';
           if (contentType.includes('application/json')) {
             const body = await response.json().catch(() => null);
             if (body) {
-              onLog(`[SNIFFER] 📦 Respuesta JSON capturada de endpoint: ${url.split('?')[0]}`);
+              onLog(`[SNIFFER] 📦 JSON capturado: ${url.split('?')[0]}`);
               this.apiEndpoints[url] = {
                 status,
                 sampleResponse: body
@@ -77,7 +81,12 @@ class SunatApiSniffer {
           }
         } catch (e) {}
       }
-    });
+    };
+
+    if (target.on) {
+      target.on('request', handleRequest);
+      target.on('response', handleResponse);
+    }
   }
 
   /**
