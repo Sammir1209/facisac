@@ -75,17 +75,39 @@ async function handleMultiRucPopups(page, log) {
             return 'CONTINUAR_SIN';
           }
 
+          // D) Nuevo modal SUNAT: 'Continuar sin código' (#btnWithOutCode)
+          const btnSinCodigo = document.getElementById('btnWithOutCode')
+            || document.querySelector('button#btnWithOutCode, .btn-choice#btnWithOutCode')
+            || Array.from(document.querySelectorAll('button, a')).find(b => {
+              const t = (b.innerText || b.textContent || '').trim().toLowerCase();
+              return t.includes('continuar sin código') || t.includes('continuar sin codigo') || t.includes('sin verificación adicional') || t.includes('sin verificacion adicional');
+            });
+          if (btnSinCodigo) {
+            btnSinCodigo.click();
+            return 'CONTINUAR_SIN_CODIGO';
+          }
+
           return null;
         }).catch(() => null);
 
         if (accionadoDOM) {
-          log(`[Aviso detectado y cerrado vía DOM [Tipo: ${accionadoDOM}].`);
+          log(`✅ Aviso detectado y cerrado vía DOM [Tipo: ${accionadoDOM}].`);
           await page.waitForTimeout(400);
           accionó = true;
           break;
         }
 
-        // 1. Popup "Informativo" con botón Finalizar
+        // 1. Nuevo modal SUNAT: Continuar sin código (#btnWithOutCode)
+        const btnSinCodLoc = frame.locator(`button#btnWithOutCode, #btnWithOutCode, //button[contains(.,'Continuar sin código') or contains(.,'Continuar sin codigo')]`).first();
+        if (await btnSinCodLoc.isVisible({ timeout: 200 }).catch(() => false)) {
+          await btnSinCodLoc.click({ force: true });
+          log("✅ Modal 'Continuar sin código' (#btnWithOutCode) clickeado.");
+          await page.waitForTimeout(500);
+          accionó = true;
+          break;
+        }
+
+        // 2. Popup "Informativo" con botón Finalizar
         const btnFinalizar = frame.locator(`//button[contains(.,'Finalizar') or contains(.,'finalizar')] | //input[@value='Finalizar'] | //a[contains(.,'Finalizar')]`).first();
         if (await btnFinalizar.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnFinalizar.click({ force: true });
@@ -94,7 +116,7 @@ async function handleMultiRucPopups(page, log) {
           break;
         }
 
-        // 2. Pantalla "Valida tus datos de contacto": Continuar sin confirmar
+        // 3. Pantalla "Valida tus datos de contacto": Continuar sin confirmar
         const btnContinuarSin = frame.locator(`//button[contains(., 'Continuar sin confirmar') or contains(.,'sin confirmar')] | //input[contains(@value, 'sin confirmar')]`).first();
         if (await btnContinuarSin.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnContinuarSin.click({ force: true });
@@ -103,7 +125,7 @@ async function handleMultiRucPopups(page, log) {
           break;
         }
 
-        // 3. Buzón: Ver más tarde / Continuar más tarde / Omitir (#btnCerrar)
+        // 4. Buzón: Ver más tarde / Continuar más tarde / Omitir (#btnCerrar)
         const btnDescarte = frame.locator(`button#btnCerrar, #btnCerrar, button[onclick*='callHide'], button:has-text('Ver más tarde'), button:has-text('Ver mas tarde')`).first();
         if (await btnDescarte.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnDescarte.click({ force: true });
@@ -334,6 +356,9 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
             // Descartar de paso cualquier buzón o aviso que persista
             const buzon = document.getElementById('btnCerrar') || document.querySelector('button[onclick*="callHide"]');
             if (buzon) buzon.click();
+
+            const sinCod = document.getElementById('btnWithOutCode') || document.querySelector('button#btnWithOutCode, .btn-choice#btnWithOutCode');
+            if (sinCod) sinCod.click();
 
             const divEmp = document.querySelector('#divOpcionServicio2, [data-id="2"]');
             if (divEmp) {
