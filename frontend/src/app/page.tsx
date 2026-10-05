@@ -59,8 +59,17 @@ export default function DashboardPage() {
   const [activeView, setActiveView] = useState<'grid' | 'calendar'>('grid');
   const [currentTab, setCurrentTab] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('2026');
-  const [selectedMonth, setSelectedMonth] = useState<string>('Agosto');
+  // Periodo fiscal por defecto dinámico (mes vencido a declarar)
+  const [selectedYear, setSelectedYear] = useState<string>(() => {
+    const d = new Date();
+    return d.getMonth() === 0 ? String(d.getFullYear() - 1) : String(d.getFullYear());
+  });
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const d = new Date();
+    const idx = d.getMonth() - 1;
+    return idx < 0 ? meses[11] : meses[idx];
+  });
   
   // Modales adicionales
   const [activeDetailClient, setActiveDetailClient] = useState<Cliente | null>(null);
