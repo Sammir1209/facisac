@@ -241,7 +241,22 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
   const page = await context.newPage();
   await page.bringToFront();
 
-  // Acoplar también a la página
+  // Escuchar cualquier pestaña nueva que SUNAT abra (por ejemplo al ingresar a SIRE o RCE)
+  // y traerla automáticamente al frente para que siempre sea visible en pantalla
+  let activePage = page;
+  context.on('page', async (newPage) => {
+    try {
+      activePage = newPage;
+      await newPage.bringToFront().catch(() => {});
+      sunatApiSniffer.attach(newPage, onLog);
+      newPage.on('dialog', async (dialog) => {
+        try { await dialog.accept().catch(() => {}); } catch(e) {}
+      });
+      onLog("🪟 Nueva pestaña de SUNAT detectada y traída al frente visible.");
+    } catch (e) {}
+  });
+
+  // Acoplar también a la página inicial
   sunatApiSniffer.attach(page, onLog);
 
   // Manejador seguro para diálogos nativos de JavaScript (alerts/confirms de SUNAT)
