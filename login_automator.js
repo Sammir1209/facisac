@@ -644,22 +644,35 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       const mesesMap = {
         'enero': 'ENE', 'febrero': 'FEB', 'marzo': 'MAR', 'abril': 'ABR',
         'mayo': 'MAY', 'junio': 'JUN', 'julio': 'JUL', 'agosto': 'AGO',
-        'septiembre': 'SET', 'setiembre': 'SET', 'octubre': 'OCT',
+        'septiembre': 'SEP', 'setiembre': 'SEP', 'octubre': 'OCT',
         'noviembre': 'NOV', 'diciembre': 'DIC'
       };
       
       const mesKey = (periodoMes || '').toLowerCase().trim();
       const mesCodigo = mesesMap[mesKey] || (periodoMes.substring(0, 3).toUpperCase());
+      const regexMesMatcher = (mesKey.includes('sep') || mesKey.includes('set')) 
+        ? /^(SEP|SET|SEPTIEMBRE|SETIEMBRE)$/i 
+        : new RegExp(`^(${mesCodigo}|${periodoMes})$`, 'i');
 
-      onLog(`Seleccionando Mes: '${mesCodigo}' (${periodoMes})...`);
+      onLog(`Seleccionando Mes: '${mesCodigo}' / regex: ${regexMesMatcher} (${periodoMes})...`);
 
       const selectStdMes = activeSireFrame.locator("select#cboMes, select[name*='mes']").first();
       if (await selectStdMes.isVisible({ timeout: 300 }).catch(() => false)) {
-        await selectStdMes.selectOption({ label: mesCodigo }).catch(async () => {
-          await selectStdMes.selectOption({ value: mesCodigo }).catch(async () => {
-            await selectStdMes.selectOption({ index: 8 }).catch(() => {});
-          });
-        });
+        // Intentar seleccionar por SEP o SET
+        let seleccionadoStd = false;
+        for (const cod of [mesCodigo, (mesCodigo === 'SEP' ? 'SET' : mesCodigo), periodoMes]) {
+          try {
+            await selectStdMes.selectOption({ label: cod });
+            seleccionadoStd = true;
+            break;
+          } catch (e) {
+            try {
+              await selectStdMes.selectOption({ value: cod });
+              seleccionadoStd = true;
+              break;
+            } catch (e2) {}
+          }
+        }
       } else {
         // Buscar el dropdown de mes de forma segura
         let ngSelectMes = activeSireFrame.locator("ng-select[formcontrolname='mes'], ng-select[bindlabel='mes']").first();
@@ -687,7 +700,11 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         }
         
         const textoActualMes = (await ngSelectMes.innerText({ timeout: 1000 }).catch(() => '')) || '';
-        if (!textoActualMes.toUpperCase().includes(mesCodigo)) {
+        const yaEstaSeleccionado = (mesKey.includes('sep') || mesKey.includes('set'))
+          ? (textoActualMes.toUpperCase().includes('SEP') || textoActualMes.toUpperCase().includes('SET'))
+          : textoActualMes.toUpperCase().includes(mesCodigo);
+
+        if (!yaEstaSeleccionado) {
           await ngSelectMes.click({ force: true, timeout: 3000 }).catch(async () => {
             // Si falla el click normal, intentar click vía DOM
             await ngSelectMes.evaluate(el => el.click()).catch(() => {});
@@ -695,7 +712,11 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           await page.waitForTimeout(200);
 
           let mesSeleccionado = false;
-          const optMes = activeSireFrame.locator("ng-dropdown-panel .ng-option, .ng-dropdown-panel span, .ng-option").filter({ hasText: new RegExp(`^\\s*${mesCodigo}|${mes}`, 'i') }).first();
+          // Buscar opción que coincida con SEP o SET o el nombre completo del mes
+          const optMes = activeSireFrame.locator("ng-dropdown-panel .ng-option, .ng-dropdown-panel span, .ng-option")
+            .filter({ hasText: (mesKey.includes('sep') || mesKey.includes('set')) ? /(SEP|SET|Septiembre|Setiembre)/i : new RegExp(`^\\s*${mesCodigo}|${periodoMes}`, 'i') })
+            .first();
+
           if (await optMes.isVisible({ timeout: 1000 }).catch(() => false)) {
             await optMes.click({ force: true }).catch(() => {});
             mesSeleccionado = true;
@@ -1177,16 +1198,36 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           }
 
           // Esperar a que el modal desaparezca completamente antes de avanzar
-          await modalDialogLocator.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
-          await page.waitForTimeout(800);
+          await modalDialogLocator.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+          await page.waitForTimeout(400);
 
           comprobantesModificadosGlobal.push(item);
 
-          // SUNAT resetea la vista a la Página 1 y a 20 registros tras guardar
-          onLog("🔄 SUNAT actualizó la lista tras guardar. Restableciendo a 100 registros y reiniciando auditoría...");
-          await asegurar100RegistrosPorPagina();
-          numeroPagina = 1;
-          continue; // Vuelve al inicio del bucle en la página 1 con 100 registros
+          // Si tras guardar SUNAT resetea la vista a la Página 1:
+          const paginaPrev = numeroPagina;
+          const reconfigurado = await asegurar100RegistrosPorPagina();
+          if (reconfigurado) {
+            onLog("🔄 SUNAT reinició paginación. Restablecido a 100 registros.");
+          }
+
+          // Si estábamos en una página mayor a 1, volver a ella directamente para continuar procesando
+          if (paginaPrev > 1) {
+            onLog(`⚡ Reanudando en Página ${paginaPrev}...`);
+            for (let p = 1; p < paginaPrev; p++) {
+              await targetFrame.evaluate(() => {
+                const btns = Array.from(document.querySelectorAll('button'));
+                const btnSiguiente = btns.find(b => (b.innerText || '').includes('Siguiente'));
+                if (btnSiguiente && !btnSiguiente.disabled && !btnSiguiente.classList.contains('disabled')) {
+                  btnSiguiente.click();
+                }
+              }).catch(() => {});
+              await page.waitForTimeout(600);
+            }
+            numeroPagina = paginaPrev;
+          } else {
+            numeroPagina = 1;
+          }
+          continue; // Vuelve al inicio del bucle en la página actual
         }
 
         // Si en la página actual NO hay comprobantes por modificar, avanzar con 'Siguiente'
