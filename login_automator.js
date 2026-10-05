@@ -1016,12 +1016,24 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       let numeroPagina = 1;
 
       while (true) {
+        // Localizar dinámicamente el frame que contiene la tabla del RCE
+        for (const f of [activeSireFrame, targetFrame, page, ...page.frames()]) {
+          const tieneTabla = await f.evaluate(() => {
+            const ths = Array.from(document.querySelectorAll('table th')).map(t => (t.innerText || '').toUpperCase());
+            return ths.some(t => t.includes('GRAVADO') || t.includes('IGV'));
+          }).catch(() => false);
+          if (tieneTabla) {
+            targetFrame = f;
+            break;
+          }
+        }
+
         // Asegurar que siempre esté en 100 registros antes de escanear la página
         await asegurar100RegistrosPorPagina();
         onLog(`📄 Analizando página ${numeroPagina} (lote de 100 registros)...`);
 
         // Esperar activamente a que los datos de la tabla terminen de cargar (spinner o petición POST busqueda)
-        for (let w = 0; w < 12; w++) {
+        for (let w = 0; w < 15; w++) {
           const tieneFilasOCargando = await targetFrame.evaluate(() => {
             const spinner = document.querySelector('.spinner-border, .loading, .block-ui-spinner, .sk-spinner');
             if (spinner && spinner.offsetParent !== null) return 'CARGANDO';
@@ -1033,10 +1045,10 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           if (tieneFilasOCargando === 'LISTO') break;
           await page.waitForTimeout(600);
         }
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(800);
 
         // Evaluar la tabla de la página actual
-        const evaluacionTabla = await targetFrame.evaluate(() => {
+        let evaluacionTabla = await targetFrame.evaluate(() => {
           const theadRows = Array.from(document.querySelectorAll('table thead tr'));
           let headerRow = theadRows[theadRows.length - 1];
           let headers = [];
@@ -1099,6 +1111,50 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
             filasAModificar
           };
         });
+
+        // Si evaluacionTabla dio 0 filas en el frame actual, escanear todos los demás frames
+        if (evaluacionTabla.totalFilas === 0) {
+          for (const f of [page, ...page.frames()]) {
+            if (f === targetFrame) continue;
+            const candEval = await f.evaluate(() => {
+              const theadRows = Array.from(document.querySelectorAll('table thead tr'));
+              let headerRow = theadRows[theadRows.length - 1];
+              let headers = headerRow ? Array.from(headerRow.querySelectorAll('th')).map(th => th.innerText ? th.innerText.trim() : '') : [];
+              let biIndex = headers.findIndex(h => h.toUpperCase().includes('BI GRAVADO DG') || (h.toUpperCase().includes('GRAVADO DG') && !h.toUpperCase().includes('NO GRAV')));
+              let igvIndex = headers.findIndex(h => h.toUpperCase().includes('IGV / IPM DG') || h.toUpperCase().includes('IGV/IPM DG') || (h.toUpperCase().includes('IGV') && h.toUpperCase().includes('DG') && !h.toUpperCase().includes('NO GRAV')));
+
+              const filas = Array.from(document.querySelectorAll('table tbody tr'));
+              let filasAModificar = [];
+              let totalFilasReales = 0;
+
+              filas.forEach((tr, index) => {
+                if (tr.classList.contains('total') || tr.querySelector('th') || tr.closest('tfoot')) return;
+                const celdas = Array.from(tr.querySelectorAll('td')).map(td => td.innerText ? td.innerText.trim() : '');
+                if (celdas.length < 5) return;
+                totalFilasReales++;
+
+                let biVal = biIndex !== -1 && celdas[biIndex] ? parseFloat(celdas[biIndex].replace(/,/g, '')) || 0 : 0;
+                let igvVal = igvIndex !== -1 && celdas[igvIndex] ? parseFloat(celdas[igvIndex].replace(/,/g, '')) || 0 : 0;
+                if (Math.abs(biVal) > 0.001 || Math.abs(igvVal) > 0.001) {
+                  filasAModificar.push({
+                    indiceFila: index,
+                    bi: biVal,
+                    igv: igvVal,
+                    documento: celdas[6] || celdas[5] || `Fila ${index + 1}`
+                  });
+                }
+              });
+
+              return { biIndex, igvIndex, totalFilas: totalFilasReales, filasAModificar };
+            }).catch(() => null);
+
+            if (candEval && candEval.totalFilas > 0) {
+              targetFrame = f;
+              evaluacionTabla = candEval;
+              break;
+            }
+          }
+        }
 
         totalComprobantesAuditados += evaluacionTabla.totalFilas;
         onLog(`📊 Página ${numeroPagina}: ${evaluacionTabla.totalFilas} registros encontrados. Comprobantes con saldo > 0.00: ${evaluacionTabla.filasAModificar.length}`);
