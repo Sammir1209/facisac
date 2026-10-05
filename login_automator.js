@@ -6,6 +6,31 @@ const { sunatApiSniffer } = require('./sunat_api_sniffer');
 const SUNAT_LOGIN_URL = "https://api-seguridad.sunat.gob.pe/v1/clientessol/4f3b88b3-d9d6-402a-b85d-6a0bc857746a/oauth2/loginMenuSol?lang=es-PE&showDni=true&showLanguages=false&originalUrl=https://e-menu.sunat.gob.pe/cl-ti-itmenu/AutenticaMenuInternet.htm&state=rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAAAx3CAAAABAAAAADdAADZXhlcHQABnBhcmFtc3QASyomKiYvY2wtdGktaXRtZW51L01lbnVJbnRlcm5ldC5odG0mYjY0ZDI2YThiNWFmMDkxOTIzYjIzYjY0MDdhMWMxZGI0MWU3MzNhNnQABGV4ZWNweA==";
 
 /**
+ * Calcula automáticamente el periodo tributario a declarar (mes anterior al mes en curso).
+ * Ejemplo: En Octubre se declara Septiembre. En Enero se declara Diciembre del año anterior.
+ */
+function getPeriodoFiscalPorDefecto() {
+  const fechaActual = new Date();
+  const nombresMeses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  
+  let mesIndex = fechaActual.getMonth() - 1; // Mes anterior
+  let anio = fechaActual.getFullYear();
+  
+  if (mesIndex < 0) {
+    mesIndex = 11; // Diciembre
+    anio -= 1;
+  }
+  
+  return {
+    anio: String(anio),
+    mes: nombresMeses[mesIndex]
+  };
+}
+
+/**
  * Espera y maneja cualquier popup de SUNAT de forma robusta
  */
 async function handleMultiRucPopups(page, log) {
@@ -139,12 +164,18 @@ async function waitForMenuLoaded(page, log) {
 /**
  * Ejecución de un intento único
  */
-async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agosto', soloLogin, abortSignal, onBrowserCreated }, onLog) {
+async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abortSignal, onBrowserCreated }, onLog) {
   if (abortSignal && abortSignal.aborted) {
     throw new Error("Tarea cancelada antes de iniciar.");
   }
+  
+  // Si no se especifica periodo, resolver automáticamente (mes anterior al actual)
+  const periodoAuto = getPeriodoFiscalPorDefecto();
+  const periodoAnio = String(anio || periodoAuto.anio).trim();
+  const periodoMes = String(mes || periodoAuto.mes).trim();
+
   const isHeadless = process.env.HEADLESS === 'true' || process.platform === 'linux';
-  onLog(`Abriendo Google Chrome (${isHeadless ? 'Modo Headless Cloud' : 'Modo Visible'}) para RUC: ${ruc}...`);
+  onLog(`Abriendo Google Chrome (${isHeadless ? 'Modo Headless Cloud' : 'Modo Visible'}) para RUC: ${ruc} (Periodo: ${periodoAnio} / ${periodoMes})...`);
 
   let browser;
   const launchArgs = [
@@ -559,12 +590,12 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
       }
 
       // A) Seleccionar AÑO (ng-select o select)
-      onLog(`Seleccionando Año: ${anio}...`);
+      onLog(`Seleccionando Año: ${periodoAnio}...`);
 
       const selectStdAnio = activeSireFrame.locator("select#cboAnio, select[name*='anio']").first();
       if (await selectStdAnio.isVisible({ timeout: 400 }).catch(() => false)) {
-        await selectStdAnio.selectOption({ label: anio }).catch(async () => {
-          await selectStdAnio.selectOption({ value: anio }).catch(() => {});
+        await selectStdAnio.selectOption({ label: periodoAnio }).catch(async () => {
+          await selectStdAnio.selectOption({ value: periodoAnio }).catch(() => {});
         });
       } else {
         let ngSelectAnio = activeSireFrame.locator("ng-select, .ng-select").first();
@@ -582,12 +613,12 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
         }
 
         const textoActualAnio = (await ngSelectAnio.innerText().catch(() => '')) || '';
-        if (!textoActualAnio.includes(anio)) {
+        if (!textoActualAnio.includes(periodoAnio)) {
           await ngSelectAnio.click({ force: true }).catch(() => {});
           await page.waitForTimeout(150);
 
           let seleccionado = false;
-          const optAnio = activeSireFrame.locator("ng-dropdown-panel .ng-option, .ng-dropdown-panel span, .ng-option").filter({ hasText: anio }).first();
+          const optAnio = activeSireFrame.locator("ng-dropdown-panel .ng-option, .ng-dropdown-panel span, .ng-option").filter({ hasText: periodoAnio }).first();
           if (await optAnio.isVisible({ timeout: 800 }).catch(() => false)) {
             await optAnio.click({ force: true }).catch(() => {});
             seleccionado = true;
@@ -596,17 +627,17 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
           if (!seleccionado) {
             const inputAnio = ngSelectAnio.locator("input");
             if (await inputAnio.isEditable({ timeout: 200 }).catch(() => false)) {
-              await inputAnio.fill(anio).catch(() => {});
+              await inputAnio.fill(periodoAnio).catch(() => {});
               await page.keyboard.press("Enter").catch(() => {});
             } else {
-              await page.keyboard.type(anio, { delay: 20 }).catch(() => {});
+              await page.keyboard.type(periodoAnio, { delay: 20 }).catch(() => {});
               await page.keyboard.press("Enter").catch(() => {});
             }
           }
         }
       }
       
-      onLog(`✅ Año ${anio} confirmado.`);
+      onLog(`✅ Año ${periodoAnio} confirmado.`);
       await page.waitForTimeout(150);
 
       // B) Seleccionar MES (ng-select[formcontrolname="mes"])
@@ -617,10 +648,10 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
         'noviembre': 'NOV', 'diciembre': 'DIC'
       };
       
-      const mesKey = (mes || '').toLowerCase().trim();
-      const mesCodigo = mesesMap[mesKey] || (mes.substring(0, 3).toUpperCase());
+      const mesKey = (periodoMes || '').toLowerCase().trim();
+      const mesCodigo = mesesMap[mesKey] || (periodoMes.substring(0, 3).toUpperCase());
 
-      onLog(`Seleccionando Mes: '${mesCodigo}' (${mes})...`);
+      onLog(`Seleccionando Mes: '${mesCodigo}' (${periodoMes})...`);
 
       const selectStdMes = activeSireFrame.locator("select#cboMes, select[name*='mes']").first();
       if (await selectStdMes.isVisible({ timeout: 300 }).catch(() => false)) {
@@ -1431,4 +1462,7 @@ async function ejecutarPaso1Login(credenciales, onLog = console.log, options = {
   }
 }
 
-module.exports = { ejecutarPaso1Login };
+module.exports = { 
+  ejecutarPaso1Login,
+  getPeriodoFiscalPorDefecto
+};

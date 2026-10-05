@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const xlsx = require('xlsx');
-const { ejecutarPaso1Login } = require('./login_automator');
+const { ejecutarPaso1Login, getPeriodoFiscalPorDefecto } = require('./login_automator');
 const { circuitBreaker } = require('./circuit_breaker');
 const { validarCredencialSol, validarLoteCredenciales } = require('./sunat_fast_checker');
 const { whatsAppService } = require('./whatsapp_service');
@@ -178,14 +178,18 @@ class QueueManager {
         await new Promise(res => setTimeout(res, Math.min(cooldown * 1000, 15000)));
       }
 
-      updateLog(`Iniciando tarea para ${job.cliente.razonSocial || job.cliente.ruc} (Periodo: ${job.cliente.anio || '2026'} / ${job.cliente.mes || 'Agosto'})`);
+      const periodoAuto = getPeriodoFiscalPorDefecto();
+      const periodoAnio = String(job.cliente.anio || periodoAuto.anio).trim();
+      const periodoMes = String(job.cliente.mes || periodoAuto.mes).trim();
+
+      updateLog(`Iniciando tarea para ${job.cliente.razonSocial || job.cliente.ruc} (Periodo: ${periodoAnio} / ${periodoMes})`);
       
       const resultado = await ejecutarPaso1Login({
         ruc: job.cliente.ruc,
         usuario: job.cliente.usuario,
         clave: job.cliente.clave,
-        anio: job.cliente.anio || '2026',
-        mes: job.cliente.mes || 'Agosto'
+        anio: periodoAnio,
+        mes: periodoMes
       }, updateLog, {
         abortSignal: job.abortController.signal,
         onBrowserCreated: (browser) => {
@@ -212,8 +216,8 @@ class QueueManager {
         supabase.from('auditorias_rce').upsert({
           ruc: job.cliente.ruc,
           razon_social: job.cliente.razonSocial || null,
-          anio: job.cliente.anio || '2026',
-          mes: job.cliente.mes || 'Agosto',
+          anio: periodoAnio,
+          mes: periodoMes,
           estado: resultado.estado || 'SIN_MODIFICACIONES',
           total_comprobantes: resultado.totalComprobantes || 0,
           comprobantes_modificados: resultado.comprobantesModificados || [],
@@ -242,7 +246,7 @@ class QueueManager {
 
         const mensajeWa = `*RCE SUNAT: ${job.cliente.ruc}*\n` +
           `${job.cliente.razonSocial}\n` +
-          `• *Periodo:* ${job.cliente.mes || 'Agosto'} ${job.cliente.anio || '2026'}\n` +
+          `• *Periodo:* ${periodoMes} ${periodoAnio}\n` +
           `• *Estado:* ${estadoLegible}\n` +
           `• *Hora:* ${horaPeru}`;
 
@@ -456,6 +460,7 @@ const server = http.createServer((req, res) => {
         const fgC = cellC && cellC.s && cellC.s.fgColor ? (cellC.s.fgColor.rgb || '') : '';
         const esRojo = fgB.toUpperCase().includes('FF0000') || fgC.toUpperCase().includes('FF0000');
 
+        const periodoAuto = getPeriodoFiscalPorDefecto();
         if (ruc.length >= 10 && razonSocial) {
           clientesExtraidos.push({
             id: `excel_${i}_${ruc}`,
@@ -464,8 +469,8 @@ const server = http.createServer((req, res) => {
             regimenTributario,
             usuario,
             clave,
-            anio: '2026',
-            mes: 'Agosto',
+            anio: periodoAuto.anio,
+            mes: periodoAuto.mes,
             esRojo: !!esRojo
           });
         }
