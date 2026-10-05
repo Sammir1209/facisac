@@ -151,22 +151,23 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
     '--no-sandbox',
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--window-position=0,0'
+    '--disable-gpu'
   ];
   if (!isHeadless) {
-    launchArgs.push('--start-maximized', '--new-window');
+    launchArgs.push('--start-maximized', '--window-position=50,50');
   }
 
   try {
     browser = await chromium.launch({
       headless: isHeadless,
-      slowMo: isHeadless ? 0 : 15,
+      channel: 'chrome',
+      slowMo: isHeadless ? 0 : 30,
       args: launchArgs
     });
   } catch (err) {
     browser = await chromium.launch({
       headless: isHeadless,
+      slowMo: isHeadless ? 0 : 30,
       args: launchArgs
     });
   }
@@ -184,7 +185,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
   }
 
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 800 },
+    viewport: isHeadless ? { width: 1280, height: 800 } : null,
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
   });
 
@@ -1057,92 +1058,35 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
           const modalDialogLocator = targetFrame.locator("ngb-modal-window, .modal.show, div[role='dialog']").first();
           await modalDialogLocator.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
 
-          // 4. Transferencia de montos dentro del modal usando IDs EXACTOS provistos:
-          // #mtoBIGravadaDG (Base Gravada) -> #mtoBIGravadaDNG (Base No Gravada)
-          // #mtoIgvIpmDG (IGV Gravado) -> #mtoIgvIpmDNG (IGV No Gravado)
-          
-          // A) Base Imponible
-          const inputBiGrav = modalDialogLocator.locator("input#mtoBIGravadaDG, #mtoBIGravadaDG, //label[contains(text(),'Base Imp Dest Grav')]/following::input[1]").first();
-          const inputBiNoGrav = modalDialogLocator.locator("input#mtoBIGravadaDNG, #mtoBIGravadaDNG, //label[contains(text(),'Base Imp Dest No Grav')]/following::input[1]").first();
-          
-          if (await inputBiGrav.isVisible({ timeout: 4000 }).catch(() => false)) {
-            const valBiActual = (await inputBiGrav.inputValue()).trim();
-            const numBi = parseFloat(valBiActual.replace(/,/g, '')) || 0;
-            if (valBiActual && Math.abs(numBi) > 0.001) {
-              onLog(`Cortando y transfiriendo Base Imponible (${valBiActual}) [#mtoBIGravadaDG -> #mtoBIGravadaDNG]...`);
+          // 4. Transferencia de montos ultrarrápida vía inyección y dispatch directo en el DOM
+          await modalDialogLocator.evaluate(() => {
+            const elBiGrav = document.querySelector('input#mtoBIGravadaDG, #mtoBIGravadaDG');
+            const elBiNoGrav = document.querySelector('input#mtoBIGravadaDNG, #mtoBIGravadaDNG');
+            const elIgvGrav = document.querySelector('input#mtoIgvIpmDG, #mtoIgvIpmDG');
+            const elIgvNoGrav = document.querySelector('input#mtoIgvIpmDNG, #mtoIgvIpmDNG');
 
-              await inputBiGrav.click();
-              await page.waitForTimeout(150);
-              await inputBiGrav.press("Control+A");
-              await page.waitForTimeout(100);
-              await inputBiGrav.press("Control+X");
-              await page.waitForTimeout(200);
+            const transferir = (origen, destino) => {
+              if (origen && destino) {
+                const val = (origen.value || '').trim();
+                const num = parseFloat(val.replace(/,/g, '')) || 0;
+                if (Math.abs(num) > 0.001) {
+                  destino.value = val;
+                  destino.dispatchEvent(new Event('input', { bubbles: true }));
+                  destino.dispatchEvent(new Event('change', { bubbles: true }));
 
-              await inputBiNoGrav.click();
-              await page.waitForTimeout(150);
-              await inputBiNoGrav.press("Control+A");
-              await page.waitForTimeout(100);
-              await inputBiNoGrav.press("Control+V");
-              await inputBiNoGrav.dispatchEvent('input');
-              await inputBiNoGrav.dispatchEvent('change');
-              await page.waitForTimeout(300);
+                  origen.value = '0.00';
+                  origen.dispatchEvent(new Event('input', { bubbles: true }));
+                  origen.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }
+            };
 
-              // Limpiar y tipear '0.00' en el campo gravado
-              await inputBiGrav.click();
-              await page.waitForTimeout(150);
-              await inputBiGrav.evaluate(el => { el.value = ''; });
-              await inputBiGrav.press("Control+A");
-              await inputBiGrav.press("Backspace");
-              await inputBiGrav.press("Delete");
-              await inputBiGrav.type("0.00", { delay: 60 });
-              await inputBiGrav.dispatchEvent('input');
-              await inputBiGrav.dispatchEvent('change');
-              await page.waitForTimeout(400);
-            }
-          }
+            transferir(elBiGrav, elBiNoGrav);
+            transferir(elIgvGrav, elIgvNoGrav);
+          }).catch(() => {});
 
-          // B) IGV / IPM
-          const inputIgvGrav = modalDialogLocator.locator("input#mtoIgvIpmDG, #mtoIgvIpmDG, //label[contains(text(),'IGV / IPM Dest Grav')]/following::input[1]").first();
-          const inputIgvNoGrav = modalDialogLocator.locator("input#mtoIgvIpmDNG, #mtoIgvIpmDNG, //label[contains(text(),'IGV / IMP Dest No Grav')]/following::input[1]").first();
-          
-          if (await inputIgvGrav.isVisible({ timeout: 4000 }).catch(() => false)) {
-            const valIgvActual = (await inputIgvGrav.inputValue()).trim();
-            const numIgv = parseFloat(valIgvActual.replace(/,/g, '')) || 0;
-            if (valIgvActual && Math.abs(numIgv) > 0.001) {
-              onLog(`Cortando y transfiriendo IGV (${valIgvActual}) [#mtoIgvIpmDG -> #mtoIgvIpmDNG]...`);
-
-              await inputIgvGrav.click();
-              await page.waitForTimeout(150);
-              await inputIgvGrav.press("Control+A");
-              await page.waitForTimeout(100);
-              await inputIgvGrav.press("Control+X");
-              await page.waitForTimeout(200);
-
-              await inputIgvNoGrav.click();
-              await page.waitForTimeout(150);
-              await inputIgvNoGrav.press("Control+A");
-              await page.waitForTimeout(100);
-              await inputIgvNoGrav.press("Control+V");
-              await inputIgvNoGrav.dispatchEvent('input');
-              await inputIgvNoGrav.dispatchEvent('change');
-              await page.waitForTimeout(300);
-
-              // Limpiar y tipear '0.00' en el campo gravado
-              await inputIgvGrav.click();
-              await page.waitForTimeout(150);
-              await inputIgvGrav.evaluate(el => { el.value = ''; });
-              await inputIgvGrav.press("Control+A");
-              await inputIgvGrav.press("Backspace");
-              await inputIgvGrav.press("Delete");
-              await inputIgvGrav.type("0.00", { delay: 60 });
-              await inputIgvGrav.dispatchEvent('input');
-              await inputIgvGrav.dispatchEvent('change');
-              await page.waitForTimeout(500);
-            }
-          }
-
-          onLog("✅ Datos transferidos y campos en 0.00 escritos. Guardando comprobante...");
-          await page.waitForTimeout(1000);
+          onLog("✅ Datos transferidos y campos en 0.00 escritos instantáneamente en el DOM. Guardando comprobante...");
+          await page.waitForTimeout(300);
 
           // 5. Clic en "Guardar" del modal de edición (button.btn-success o [ngbtooltip="Guardar Comprobante"])
           let guardadoClickeado = false;
@@ -1169,11 +1113,11 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
 
           if (!guardadoClickeado) {
             const btnGuardarModal = modalDialogLocator.locator("button.btn-success, button[ngbtooltip='Guardar Comprobante'], //button[contains(normalize-space(.),'Guardar')]").first();
-            if (await btnGuardarModal.isVisible({ timeout: 4000 }).catch(() => false)) {
+            if (await btnGuardarModal.isVisible({ timeout: 2000 }).catch(() => false)) {
               await btnGuardarModal.click({ force: true });
             }
           }
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(600);
 
           // 6. Confirmación del sistema: "¿Está seguro...?" -> Presionar 'Si' (button.btn-primary:has-text("Si"))
           onLog("Confirmando cambios en el diálogo de SUNAT (clic en 'Si')...");
@@ -1198,12 +1142,12 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
               onLog("✅ Comprobante modificado y confirmado con éxito.");
               break;
             }
-            await page.waitForTimeout(800);
+            await page.waitForTimeout(400);
           }
 
           // Esperar a que el modal desaparezca completamente antes de avanzar
-          await modalDialogLocator.waitFor({ state: 'hidden', timeout: 6000 }).catch(() => {});
-          await page.waitForTimeout(2000);
+          await modalDialogLocator.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
+          await page.waitForTimeout(800);
 
           comprobantesModificadosGlobal.push(item);
 
