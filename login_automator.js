@@ -1019,7 +1019,21 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         // Asegurar que siempre esté en 100 registros antes de escanear la página
         await asegurar100RegistrosPorPagina();
         onLog(`📄 Analizando página ${numeroPagina} (lote de 100 registros)...`);
-        await page.waitForTimeout(2000);
+
+        // Esperar activamente a que los datos de la tabla terminen de cargar (spinner o petición POST busqueda)
+        for (let w = 0; w < 12; w++) {
+          const tieneFilasOCargando = await targetFrame.evaluate(() => {
+            const spinner = document.querySelector('.spinner-border, .loading, .block-ui-spinner, .sk-spinner');
+            if (spinner && spinner.offsetParent !== null) return 'CARGANDO';
+            const filas = Array.from(document.querySelectorAll('table tbody tr'));
+            const filasValidas = filas.filter(tr => !tr.classList.contains('total') && !tr.querySelector('th') && !tr.closest('tfoot'));
+            return filasValidas.length > 0 ? 'LISTO' : 'VACIO';
+          }).catch(() => 'VACIO');
+
+          if (tieneFilasOCargando === 'LISTO') break;
+          await page.waitForTimeout(600);
+        }
+        await page.waitForTimeout(1000);
 
         // Evaluar la tabla de la página actual
         const evaluacionTabla = await targetFrame.evaluate(() => {
