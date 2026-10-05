@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+const { sunatApiSniffer } = require('./sunat_api_sniffer');
 
 const SUNAT_LOGIN_URL = "https://api-seguridad.sunat.gob.pe/v1/clientessol/4f3b88b3-d9d6-402a-b85d-6a0bc857746a/oauth2/loginMenuSol?lang=es-PE&showDni=true&showLanguages=false&originalUrl=https://e-menu.sunat.gob.pe/cl-ti-itmenu/AutenticaMenuInternet.htm&state=rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAAAx3CAAAABAAAAADdAADZXhlcHQABnBhcmFtc3QASyomKiYvY2wtdGktaXRtZW51L01lbnVJbnRlcm5ldC5odG0mYjY0ZDI2YThiNWFmMDkxOTIzYjIzYjY0MDdhMWMxZGI0MWU3MzNhNnQABGV4ZWNweA==";
 
@@ -212,6 +213,9 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
 
   const page = await context.newPage();
   await page.bringToFront();
+
+  // Acoplar sniffer para capturar tokens y endpoints REST de SUNAT SIRE
+  sunatApiSniffer.attach(page, onLog);
 
   // Manejador seguro para diálogos nativos de JavaScript (alerts/confirms de SUNAT)
   page.on('dialog', async (dialog) => {
@@ -1291,6 +1295,11 @@ async function ejecutarIntento({ ruc, usuario, clave, anio = '2026', mes = 'Agos
         await browser.close().catch(() => {});
       }
       onLog("✅ Ventana de Chrome cerrada completamente.");
+    } catch (e) {}
+
+    // Guardar catálogo de endpoints y tokens interceptados para el motor cURL
+    try {
+      sunatApiSniffer.saveDump(ruc);
     } catch (e) {}
 
     return { 
