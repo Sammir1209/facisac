@@ -1667,6 +1667,22 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         totalesFinales: { biGravadoDG: 0, igvGravadoDG: 0, biNoGravadoDNG: 0, igvNoGravadoDNG: 0 }
       }));
 
+      // Si el interceptor de SUNAT capturó el JSON oficial de totales (/resumencomprobantes/rce/), usarlo como fuente oficial exacta
+      try {
+        const resumenEndpointKey = Object.keys(sunatApiSniffer.apiEndpoints).find(k => k.includes('resumencomprobantes'));
+        if (resumenEndpointKey && sunatApiSniffer.apiEndpoints[resumenEndpointKey]?.sampleResponse?.totales) {
+          const totOficial = sunatApiSniffer.apiEndpoints[resumenEndpointKey].sampleResponse.totales;
+          verificacionFinal.totalesFinales = {
+            biGravadoDG: totOficial.mtoBIGravadoDG || 0,
+            igvGravadoDG: totOficial.mtoIgvIpmDG || 0,
+            biNoGravadoDNG: totOficial.mtoBiGravadoDNG || 0,
+            igvNoGravadoDNG: totOficial.mtoIgvIpmDNG || 0,
+            totalComprobantes: totOficial.cntDocumentos || totalComprobantesAuditados
+          };
+          onLog(`🎯 [API OFICIAL SUNAT] Totales confirmados directamente: BI Gravado: S/ ${verificacionFinal.totalesFinales.biGravadoDG.toFixed(2)}, IGV Gravado: S/ ${verificacionFinal.totalesFinales.igvGravadoDG.toFixed(2)}, BI No Gravado: S/ ${verificacionFinal.totalesFinales.biNoGravadoDNG.toFixed(2)}, IGV No Gravado: S/ ${verificacionFinal.totalesFinales.igvNoGravadoDNG.toFixed(2)}`);
+        }
+      } catch (eTotOficial) {}
+
       if (verificacionFinal.pendientes > 0) {
         onLog(`⚠️ ADVERTENCIA DE AUDITORÍA: Aún quedan ${verificacionFinal.pendientes} comprobante(s) con saldo > 0.00. No se emite confirmación cerrada hasta estar al 100% en 0.00.`);
       } else {
