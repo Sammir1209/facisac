@@ -1387,11 +1387,14 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           await modalDialogLocator.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
 
           // 4. Transferencia de montos ultrarrápida vía inyección y dispatch directo en el DOM
-          await modalDialogLocator.evaluate(() => {
+          const datosTransferencia = await modalDialogLocator.evaluate(() => {
             const elBiGrav = document.querySelector('input#mtoBIGravadaDG, #mtoBIGravadaDG');
             const elBiNoGrav = document.querySelector('input#mtoBIGravadaDNG, #mtoBIGravadaDNG');
             const elIgvGrav = document.querySelector('input#mtoIgvIpmDG, #mtoIgvIpmDG');
             const elIgvNoGrav = document.querySelector('input#mtoIgvIpmDNG, #mtoIgvIpmDNG');
+
+            let valorBiTrasladado = 0;
+            let valorIgvTrasladado = 0;
 
             const transferir = (origen, destino) => {
               if (origen && destino) {
@@ -1405,15 +1408,25 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
                   origen.value = '0.00';
                   origen.dispatchEvent(new Event('input', { bubbles: true }));
                   origen.dispatchEvent(new Event('change', { bubbles: true }));
+                  return num;
                 }
               }
+              return 0;
             };
 
-            transferir(elBiGrav, elBiNoGrav);
-            transferir(elIgvGrav, elIgvNoGrav);
-          }).catch(() => {});
+            valorBiTrasladado = transferir(elBiGrav, elBiNoGrav);
+            valorIgvTrasladado = transferir(elIgvGrav, elIgvNoGrav);
 
-          onLog("✅ Datos transferidos y campos en 0.00 escritos instantáneamente en el DOM. Guardando comprobante...");
+            return {
+              biTrasladado: valorBiTrasladado,
+              igvTrasladado: valorIgvTrasladado
+            };
+          }).catch(() => ({ biTrasladado: 0, igvTrasladado: 0 }));
+
+          item.biTrasladado = datosTransferencia.biTrasladado || item.bi;
+          item.igvTrasladado = datosTransferencia.igvTrasladado || item.igv;
+
+          onLog(`✅ Transferido a No Gravado (BI No Grav.: ${item.biTrasladado}, IGV No Grav.: ${item.igvTrasladado}) | BI Gravado e IGV Gravado en 0.00. Guardando comprobante...`);
           await page.waitForTimeout(300);
 
           // 5. Clic en "Guardar" del modal de edición (button.btn-success o [ngbtooltip="Guardar Comprobante"])
@@ -1566,6 +1579,16 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
                  t === 'IGV / IPM DG' || t === 'IGV/IPM DG';
         });
 
+        let biNoGravIndex = headers.findIndex(h => {
+          const t = h.toUpperCase().replace(/\s+/g, ' ');
+          return (t.includes('BI') && t.includes('NO GRAV')) || (t.includes('BASE') && t.includes('NO GRAV')) || t === 'BI GRAVADO DNG';
+        });
+
+        let igvNoGravIndex = headers.findIndex(h => {
+          const t = h.toUpperCase().replace(/\s+/g, ' ');
+          return (t.includes('IGV') && t.includes('NO GRAV')) || t === 'IGV / IPM DNG' || t === 'IGV/IPM DNG';
+        });
+
         if (biIndex === -1) {
           headers.forEach((h, idx) => {
             const t = h.toUpperCase();
@@ -1593,8 +1616,48 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           }
         });
 
-        return { pendientes, totalFilas: comprobantesValidos };
-      }).catch(() => ({ pendientes: 0, totalFilas: 0 }));
+        // Extraer los totales finales confirmados de la tabla (tfoot o tr.total)
+        let totalBiGravadoDG = 0;
+        let totalIgvGravadoDG = 0;
+        let totalBiNoGravadoDNG = 0;
+        let totalIgvNoGravadoDNG = 0;
+
+        const filaTotal = Array.from(document.querySelectorAll('table tfoot tr, table tr.total, table tbody tr')).find(r => {
+          const txt = (r.innerText || '').toLowerCase();
+          return txt.includes('total') || txt.includes('totales');
+        });
+
+        if (filaTotal) {
+          const celdasTot = Array.from(filaTotal.querySelectorAll('td, th')).map(c => (c.innerText || '').trim());
+          if (biIndex !== -1 && celdasTot[biIndex]) {
+            totalBiGravadoDG = parseFloat(celdasTot[biIndex].replace(/,/g, '')) || 0;
+          }
+          if (igvIndex !== -1 && celdasTot[igvIndex]) {
+            totalIgvGravadoDG = parseFloat(celdasTot[igvIndex].replace(/,/g, '')) || 0;
+          }
+          if (biNoGravIndex !== -1 && celdasTot[biNoGravIndex]) {
+            totalBiNoGravadoDNG = parseFloat(celdasTot[biNoGravIndex].replace(/,/g, '')) || 0;
+          }
+          if (igvNoGravIndex !== -1 && celdasTot[igvNoGravIndex]) {
+            totalIgvNoGravadoDNG = parseFloat(celdasTot[igvNoGravIndex].replace(/,/g, '')) || 0;
+          }
+        }
+
+        return { 
+          pendientes, 
+          totalFilas: comprobantesValidos,
+          totalesFinales: {
+            biGravadoDG: totalBiGravadoDG,
+            igvGravadoDG: totalIgvGravadoDG,
+            biNoGravadoDNG: totalBiNoGravadoDNG,
+            igvNoGravadoDNG: totalIgvNoGravadoDNG
+          }
+        };
+      }).catch(() => ({ 
+        pendientes: 0, 
+        totalFilas: 0,
+        totalesFinales: { biGravadoDG: 0, igvGravadoDG: 0, biNoGravadoDNG: 0, igvNoGravadoDNG: 0 }
+      }));
 
       if (verificacionFinal.pendientes > 0) {
         onLog(`⚠️ ADVERTENCIA DE AUDITORÍA: Aún quedan ${verificacionFinal.pendientes} comprobante(s) con saldo > 0.00. No se emite confirmación cerrada hasta estar al 100% en 0.00.`);
@@ -1619,6 +1682,12 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           ? 'SIN_COMPRAS' 
           : (comprobantesModificadosGlobal.length === 0 ? 'SIN_MODIFICACIONES' : 'MODIFICADO_EXITOSO'),
         dobleVerificacionExitosa: verificacionFinal.pendientes === 0,
+        totalesFinales: verificacionFinal.totalesFinales || {
+          biGravadoDG: 0,
+          igvGravadoDG: 0,
+          biNoGravadoDNG: 0,
+          igvNoGravadoDNG: 0
+        },
         mensaje: esSinCompras
           ? `La empresa / persona natural no cuenta con compras registradas en el mes de ${mes || 'el periodo'}`
           : (comprobantesModificadosGlobal.length === 0 
@@ -1751,6 +1820,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       estado: registroFinal?.estado || 'SIN_MODIFICACIONES',
       totalComprobantes: registroFinal?.totalComprobantes || 0,
       comprobantesModificados: registroFinal?.comprobantesModificados || [],
+      totalesFinales: registroFinal?.totalesFinales || null,
       screenshot: screenshotBase64 ? `data:image/png;base64,${screenshotBase64}` : null
     };
 

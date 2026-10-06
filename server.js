@@ -294,12 +294,37 @@ class QueueManager {
           hour12: true
         });
 
+        // Desglose de totales confirmados en la propuesta
+        let desgloseTotales = '';
+        const tot = resultado.totalesFinales;
+        if (tot) {
+          desgloseTotales = `\n\n📌 *BALANCE DE CRÉDITO FISCAL:*` +
+            `\n• *BI Gravado DG:* S/ ${Number(tot.biGravadoDG || 0).toFixed(2)} ✅` +
+            `\n• *IGV DG:* S/ ${Number(tot.igvGravadoDG || 0).toFixed(2)} ✅` +
+            `\n• *BI No Gravado (DNG):* S/ ${Number(tot.biNoGravadoDNG || 0).toFixed(2)}` +
+            `\n• *IGV No Gravado (DNG):* S/ ${Number(tot.igvNoGravadoDNG || 0).toFixed(2)}`;
+        } else if (resultado.estado === 'MODIFICADO_EXITOSO') {
+          // Si hubo modificaciones, sumar lo trasladado de comprobantes
+          const sumaBiTrasladada = modificadosArray.reduce((acc, c) => acc + (Number(c.biTrasladado || c.bi) || 0), 0);
+          const sumaIgvTrasladada = modificadosArray.reduce((acc, c) => acc + (Number(c.igvTrasladado || c.igv) || 0), 0);
+          desgloseTotales = `\n\n📌 *BALANCE DE CRÉDITO FISCAL:*` +
+            `\n• *BI Gravado DG:* S/ 0.00 ✅` +
+            `\n• *IGV DG:* S/ 0.00 ✅` +
+            `\n• *Trasladado a BI No Gravado:* S/ ${sumaBiTrasladada.toFixed(2)}` +
+            `\n• *Trasladado a IGV No Gravado:* S/ ${sumaIgvTrasladada.toFixed(2)}`;
+        } else if (resultado.estado === 'SIN_MODIFICACIONES' || resultado.estado === 'EN_CERO') {
+          desgloseTotales = `\n\n📌 *BALANCE DE CRÉDITO FISCAL:*` +
+            `\n• *BI Gravado DG:* S/ 0.00 ✅` +
+            `\n• *IGV DG:* S/ 0.00 ✅` +
+            `\n• _(Libros ya se encontraban en 0.00 sin saldo gravado)_`;
+        }
+
         const mensajeWa = `📊 *REPORTE RCE SUNAT - ${periodoMes.toUpperCase()} ${periodoAnio}*\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
           `${tipoEntidad}: *${job.cliente.razonSocial || 'N/A'}*\n` +
           `🆔 *RUC:* \`${job.cliente.ruc}\`\n` +
           `📅 *Periodo:* ${periodoMes} ${periodoAnio}\n` +
-          `📌 *Estado:* ${estadoLegible}${detalleAdicional}\n` +
+          `📌 *Estado:* ${estadoLegible}${detalleAdicional}${desgloseTotales}\n` +
           `🕐 *Fecha/Hora:* ${fechaPeru} - ${horaPeru}\n` +
           `━━━━━━━━━━━━━━━━━━━━`;
 
