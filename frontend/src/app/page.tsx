@@ -18,9 +18,40 @@ import { useRceExecution } from '@/hooks/useRceExecution';
 import { calcularVencimientoSunat } from '@/lib/sunatSchedule';
 import { Cliente } from '@/types';
 import { Loader2, AlertCircle, LayoutGrid, Calendar as CalendarIcon } from 'lucide-react';
+import { AuthModal } from '@/components/AuthModal';
 import { API_BASE } from '@/lib/apiConfig';
 
 export default function DashboardPage() {
+  // Estado de Autenticación de Usuario Local
+  const [currentUser, setCurrentUser] = useState<{ name: string; username: string } | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('facisac_auth_user');
+        return saved ? JSON.parse(saved) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const handleLoginSuccess = (user: { name: string; username: string }) => {
+    setCurrentUser(user);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('facisac_auth_user', JSON.stringify(user));
+      } catch (e) {}
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('facisac_auth_user');
+      } catch (e) {}
+    }
+  };
   // Estado de clientes y backend
   const {
     clientes,
@@ -245,6 +276,8 @@ export default function DashboardPage() {
         onOpenImportExcel={() => setIsExcelImportOpen(true)}
         onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
         onFastCheckSol={handleFastCheckSol}
+        currentUser={currentUser}
+        onLogout={handleLogout}
         isValidatingSol={isValidatingSol}
         isStoppingAll={isExecuting}
       />
@@ -442,6 +475,11 @@ export default function DashboardPage() {
         isOpen={isWhatsAppOpen}
         onClose={() => setIsWhatsAppOpen(false)}
       />
+
+      {/* 13. Pantalla de Autenticación de Usuario (Sammir, Danilo, Lenar) */}
+      {!currentUser && (
+        <AuthModal onSuccess={handleLoginSuccess} />
+      )}
     </div>
   );
 }

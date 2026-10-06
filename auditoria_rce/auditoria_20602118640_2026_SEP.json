@@ -1,0 +1,20 @@
+{
+  "ruc": "20602118640",
+  "periodo": {
+    "anio": "2026",
+    "mes": "SEP"
+  },
+  "fechaHora": "6/10/2026, 8:30:59 a. m.",
+  "totalComprobantes": 400,
+  "avisoSunat": "Modificación y verificación de propuesta RCE",
+  "estado": "SIN_MODIFICACIONES",
+  "dobleVerificacionExitosa": true,
+  "totalesFinales": {
+    "biGravadoDG": 318061.35,
+    "igvGravadoDG": 0,
+    "biNoGravadoDNG": 0,
+    "igvNoGravadoDNG": 0
+  },
+  "mensaje": "Verificado con éxito: No requirió modificaciones (BI e IGV en 0.00)",
+  "comprobantesModificados": []
+}

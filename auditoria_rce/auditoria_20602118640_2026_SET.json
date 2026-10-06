@@ -1,0 +1,255 @@
+{
+  "ruc": "20602118640",
+  "periodo": {
+    "anio": "2026",
+    "mes": "SET"
+  },
+  "fechaHora": "5/10/2026, 3:47:07 p. m.",
+  "totalComprobantes": 10204,
+  "avisoSunat": "Modificación y verificación de propuesta RCE",
+  "estado": "MODIFICADO_EXITOSO",
+  "dobleVerificacionExitosa": true,
+  "mensaje": "Modificado y auditado: 40 comprobante(s) ajustados a 0.00 con doble verificación conforme",
+  "comprobantesModificados": [
+    {
+      "indiceFila": 0,
+      "bi": 28965.43,
+      "igv": 5213.74,
+      "documento": "0.00"
+    },
+    {
+      "indiceFila": 30,
+      "bi": 678.82,
+      "igv": 122.19,
+      "documento": "F006"
+    },
+    {
+      "indiceFila": 35,
+      "bi": 452.47,
+      "igv": 81.44,
+      "documento": "F002"
+    },
+    {
+      "indiceFila": 38,
+      "bi": 254.24,
+      "igv": 45.76,
+      "documento": "E001"
+    },
+    {
+      "indiceFila": 45,
+      "bi": 101.69,
+      "igv": 18.31,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 54,
+      "bi": 1587.82,
+      "igv": 285.81,
+      "documento": "F204"
+    },
+    {
+      "indiceFila": 55,
+      "bi": 1217.8,
+      "igv": 219.2,
+      "documento": "FF03"
+    },
+    {
+      "indiceFila": 68,
+      "bi": 66.95,
+      "igv": 12.05,
+      "documento": "F535"
+    },
+    {
+      "indiceFila": 69,
+      "bi": 104.24,
+      "igv": 18.76,
+      "documento": "F078"
+    },
+    {
+      "indiceFila": 79,
+      "bi": 483.9,
+      "igv": 87.1,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 88,
+      "bi": -140.08,
+      "igv": -25.21,
+      "documento": "FN04"
+    },
+    {
+      "indiceFila": 95,
+      "bi": 60.17,
+      "igv": 10.83,
+      "documento": "FF13"
+    },
+    {
+      "indiceFila": 96,
+      "bi": 127.12,
+      "igv": 22.88,
+      "documento": "F003"
+    },
+    {
+      "indiceFila": 49,
+      "bi": 802.38,
+      "igv": 144.43,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 86,
+      "bi": 79.66,
+      "igv": 14.34,
+      "documento": "FF13"
+    },
+    {
+      "indiceFila": 22,
+      "bi": 115.25,
+      "igv": 20.75,
+      "documento": "F002"
+    },
+    {
+      "indiceFila": 23,
+      "bi": 292.97,
+      "igv": 52.73,
+      "documento": "F002"
+    },
+    {
+      "indiceFila": 24,
+      "bi": 715,
+      "igv": 128.7,
+      "documento": "F002"
+    },
+    {
+      "indiceFila": 26,
+      "bi": 2307.62,
+      "igv": 415.37,
+      "documento": "F932"
+    },
+    {
+      "indiceFila": 27,
+      "bi": 569.41,
+      "igv": 102.49,
+      "documento": "F204"
+    },
+    {
+      "indiceFila": 28,
+      "bi": 362.08,
+      "igv": 65.17,
+      "documento": "F932"
+    },
+    {
+      "indiceFila": 32,
+      "bi": 852.97,
+      "igv": 153.53,
+      "documento": "FF03"
+    },
+    {
+      "indiceFila": 33,
+      "bi": 270.51,
+      "igv": 48.69,
+      "documento": "E001"
+    },
+    {
+      "indiceFila": 34,
+      "bi": 27,
+      "igv": 4.86,
+      "documento": "E001"
+    },
+    {
+      "indiceFila": 39,
+      "bi": 783.94,
+      "igv": 141.11,
+      "documento": "F002"
+    },
+    {
+      "indiceFila": 44,
+      "bi": 27,
+      "igv": 4.86,
+      "documento": "E001"
+    },
+    {
+      "indiceFila": 46,
+      "bi": 497.3,
+      "igv": 89.51,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 52,
+      "bi": 78.81,
+      "igv": 14.19,
+      "documento": "FF13"
+    },
+    {
+      "indiceFila": 63,
+      "bi": 33.9,
+      "igv": 6.1,
+      "documento": "FF13"
+    },
+    {
+      "indiceFila": 67,
+      "bi": 1237.29,
+      "igv": 222.71,
+      "documento": "E001"
+    },
+    {
+      "indiceFila": 72,
+      "bi": 2034.64,
+      "igv": 366.23,
+      "documento": "F301"
+    },
+    {
+      "indiceFila": 74,
+      "bi": 89.83,
+      "igv": 16.17,
+      "documento": "FF13"
+    },
+    {
+      "indiceFila": 75,
+      "bi": 1718.02,
+      "igv": 309.24,
+      "documento": "F006"
+    },
+    {
+      "indiceFila": 3,
+      "bi": 894.92,
+      "igv": 161.08,
+      "documento": "F002"
+    },
+    {
+      "indiceFila": 9,
+      "bi": 27.18,
+      "igv": 4.9,
+      "documento": "F567"
+    },
+    {
+      "indiceFila": 10,
+      "bi": 71.19,
+      "igv": 12.81,
+      "documento": "F078"
+    },
+    {
+      "indiceFila": 11,
+      "bi": 1089.83,
+      "igv": 196.17,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 26,
+      "bi": 544.42,
+      "igv": 98,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 33,
+      "bi": 1321.22,
+      "igv": 237.82,
+      "documento": "F001"
+    },
+    {
+      "indiceFila": 47,
+      "bi": 16.95,
+      "igv": 3.05,
+      "documento": "FF13"
+    }
+  ]
+}

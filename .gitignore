@@ -30,3 +30,8 @@ test-results/
 playwright-report/
 last_screenshot.png
 public/last_screenshot.png
+
+# Rust / Tauri Build Artifacts
+src-tauri/target/
+*.exe
+sunat_api_logs/

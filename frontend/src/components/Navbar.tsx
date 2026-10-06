@@ -10,6 +10,8 @@ interface NavbarProps {
   onOpenImportExcel: () => void;
   onOpenWhatsApp?: () => void;
   onFastCheckSol?: () => void;
+  currentUser?: { name: string; username: string } | null;
+  onLogout?: () => void;
   isValidatingSol?: boolean;
   isStoppingAll?: boolean;
 }
@@ -21,6 +23,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenImportExcel,
   onOpenWhatsApp,
   onFastCheckSol,
+  currentUser,
+  onLogout,
   isValidatingSol = false,
   isStoppingAll = false,
 }) => {
@@ -110,6 +114,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             <AlertOctagon className="h-4 w-4 text-rose-400" />
             <span>Detener Todo</span>
           </button>
+
+          {/* Badge del Usuario Autenticado & Logout */}
+          {currentUser && (
+            <div className="ml-2 flex items-center gap-2 border-l border-slate-800 pl-3">
+              <div className="hidden sm:flex flex-col text-right">
+                <span className="text-xs font-semibold text-white tracking-wide">{currentUser.name}</span>
+                <span className="text-[10px] text-blue-400 font-medium">FACISAC Admin</span>
+              </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-all hover:bg-rose-500/20 hover:border-rose-500/40 hover:text-rose-300"
+                  title="Cerrar sesión de FACISAC"
+                >
+                  Salir
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>

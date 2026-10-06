@@ -1,0 +1,20 @@
+{
+  "ruc": "10481217020",
+  "periodo": {
+    "anio": "2026",
+    "mes": "SEP"
+  },
+  "fechaHora": "6/10/2026, 8:33:09 a. m.",
+  "totalComprobantes": 0,
+  "avisoSunat": "No cuenta con compras en el mes de Septiembre",
+  "estado": "SIN_COMPRAS",
+  "dobleVerificacionExitosa": true,
+  "totalesFinales": {
+    "biGravadoDG": 0,
+    "igvGravadoDG": 0,
+    "biNoGravadoDNG": 0,
+    "igvNoGravadoDNG": 0
+  },
+  "mensaje": "La empresa / persona natural no cuenta con compras registradas en el mes de Septiembre",
+  "comprobantesModificados": []
+}
