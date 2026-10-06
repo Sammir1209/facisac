@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Navbar } from '@/components/Navbar';
+import { Topbar } from '@/components/Topbar';
 import { KpiMetrics } from '@/components/KpiMetrics';
 import { AlertsBanner } from '@/components/AlertsBanner';
 import { GlobalPeriodBar } from '@/components/GlobalPeriodBar';
@@ -295,21 +295,15 @@ export default function DashboardPage() {
 
       {/* Área de Trabajo Principal */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* Barra Superior Global */}
-        <Navbar
+        {/* Barra Superior Limpia y Despejada (Sin botones duplicados) */}
+        <Topbar
+          currentSection={currentSection}
           onRefresh={() => {
             fetchClientes();
             fetchResultados();
           }}
           onStopAll={stopAllQueue}
-          onExportExcel={handleExportExcel}
-          onOpenImportExcel={() => setIsExcelImportOpen(true)}
-          onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
-          onFastCheckSol={handleFastCheckSol}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          isValidatingSol={isValidatingSol}
-          isStoppingAll={isExecuting}
+          isExecuting={isExecuting}
         />
 
         {/* Contenido Dinámico según la Sección Elegida */}
@@ -388,6 +382,31 @@ export default function DashboardPage() {
           {/* SECCIÓN 5: PANEL GENERAL / CARTERA (VISTA INICIAL) */}
           {currentSection === 'cartera' && (
             <>
+              {/* Barra de Herramientas de Cartera: Cargar Excel y Test SOL agrupados armónicamente */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-3xl border border-slate-800/80 bg-slate-900/40">
+                <div>
+                  <h3 className="text-sm font-bold text-white">Directorio de Empresas Activas</h3>
+                  <p className="text-xs text-slate-400">Administra las credenciales SOL y el estatus de tus clientes</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleFastCheckSol}
+                    disabled={isValidatingSol || clientes.length === 0}
+                    className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 disabled:opacity-40 transition-all"
+                  >
+                    <span>{isValidatingSol ? 'Comprobando SOL...' : 'Test Claves SOL'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsExcelImportOpen(true)}
+                    className="flex items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-300 hover:bg-blue-500/20 active:scale-95 transition-all"
+                  >
+                    <span>Cargar Excel</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Alertas de Vencimiento */}
               <AlertsBanner
                 clientes={clientes}

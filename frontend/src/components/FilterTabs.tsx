@@ -35,18 +35,18 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Pestañas de Filtro */}
-        <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-900/80 border border-slate-800">
+        <div className="flex flex-wrap gap-1.5 p-1 rounded-2xl bg-slate-900/80 border border-slate-800">
           {tabs.map((t) => {
             const isActive = currentTab === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => onSelectTab(t.id)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
@@ -56,16 +56,18 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
           })}
         </div>
 
-        {/* Buscador Rápido */}
-        <div className="relative min-w-[260px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Buscar por RUC o Razón Social..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-slate-700/80 bg-slate-900/80 py-1.5 pl-9 pr-4 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+        {/* Buscador Rápido y Acciones */}
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-[240px] flex-1">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar por RUC o Razón Social..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full rounded-xl border border-slate-700/80 bg-slate-900/90 py-1.5 pl-9 pr-4 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
         </div>
       </div>
 
