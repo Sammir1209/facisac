@@ -46,6 +46,31 @@ class QueueManager {
     const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const abortController = new AbortController();
 
+    // REGLA DE EXCLUSIÓN: Clientes marcados en rojo en el Excel no se procesan
+    if (cliente && cliente.esRojo) {
+      console.log(`[EXCLUSIÓN] Cliente omitido por estar marcado en ROJO en el Excel: ${cliente.ruc} - ${cliente.razonSocial}`);
+      const jobExcluido = {
+        id: jobId,
+        cliente,
+        progreso: 100,
+        fase: 'Excluido (Marcado en Rojo en Excel)',
+        estado: 'EXCLUIDO',
+        logs: [`[${new Date().toLocaleTimeString()}] ⛔ Cliente excluido automáticamente por estar resaltado en rojo en el archivo Excel.`],
+        screenshot: null,
+        resultado: {
+          estado: 'EXCLUIDO',
+          mensaje: 'Cliente marcado en rojo en el Excel Maestro (No procesar)'
+        },
+        creadoEn: new Date(),
+        iniciadoEn: new Date(),
+        finalizadoEn: new Date(),
+        abortController,
+        browserInstance: null
+      };
+      jobs.set(jobId, jobExcluido);
+      return jobExcluido;
+    }
+
     const job = {
       id: jobId,
       cliente,
@@ -229,26 +254,47 @@ class QueueManager {
           else console.log(`[SUPABASE] Auditoría de ${job.cliente.ruc} sincronizada en la nube.`);
         }).catch(() => {});
 
-        // Enviar notificación limpia y ejecutiva a Grupo de WhatsApp con hora Perú (America/Lima)
-        let estadoLegible = 'Libros Modificados';
-        if (resultado && (resultado.estado === 'SIN_MODIFICACIONES' || resultado.estado === 'EN_CERO')) {
-          estadoLegible = 'Libros Verificados (0.00)';
+        // Enviar notificación limpia, ejecutiva y bien diseñada a Grupo de WhatsApp con hora Perú (America/Lima)
+        const esPersonaNatural = String(job.cliente.ruc).startsWith('10');
+        const tipoEntidad = esPersonaNatural ? '👤 Persona Natural' : '🏢 Empresa / Persona Jurídica';
+        
+        let estadoLegible = '';
+        let detalleAdicional = '';
+
+        if (resultado && resultado.estado === 'SIN_COMPRAS') {
+          estadoLegible = '📦 *SIN COMPRAS REGISTRADAS*';
+          detalleAdicional = `\n📢 _No cuenta con comprobantes de compras en el mes de ${periodoMes}._`;
+        } else if (resultado && (resultado.estado === 'SIN_MODIFICACIONES' || resultado.estado === 'EN_CERO')) {
+          estadoLegible = '🛡️ *Libros Verificados en 0.00* (Sin saldo pendiente)';
         } else if (resultado && resultado.estado === 'MODIFICADO_EXITOSO') {
-          estadoLegible = `Libros Modificados (${resultado.comprobantesModificados?.length || 1} comprobante(s) ajustados a 0.00)`;
+          const totalAjustados = resultado.comprobantesModificados?.length || 1;
+          estadoLegible = `✅ *Modificado a 0.00* (${totalAjustados} comprobante(s) ajustados)`;
+        } else {
+          estadoLegible = `📋 ${resultado?.estado || 'Procesado'}`;
         }
 
-        const horaPeru = new Date().toLocaleTimeString('es-PE', { 
+        const ahoraPeru = new Date();
+        const fechaPeru = ahoraPeru.toLocaleDateString('es-PE', {
+          timeZone: 'America/Lima',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+        const horaPeru = ahoraPeru.toLocaleTimeString('es-PE', { 
           timeZone: 'America/Lima', 
           hour: '2-digit', 
           minute: '2-digit',
           hour12: true
         });
 
-        const mensajeWa = `*RCE SUNAT: ${job.cliente.ruc}*\n` +
-          `${job.cliente.razonSocial}\n` +
-          `• *Periodo:* ${periodoMes} ${periodoAnio}\n` +
-          `• *Estado:* ${estadoLegible}\n` +
-          `• *Hora:* ${horaPeru}`;
+        const mensajeWa = `📊 *REPORTE RCE SUNAT - ${periodoMes.toUpperCase()} ${periodoAnio}*\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `${tipoEntidad}: *${job.cliente.razonSocial || 'N/A'}*\n` +
+          `🆔 *RUC:* \`${job.cliente.ruc}\`\n` +
+          `📅 *Periodo:* ${periodoMes} ${periodoAnio}\n` +
+          `📌 *Estado:* ${estadoLegible}${detalleAdicional}\n` +
+          `🕐 *Fecha/Hora:* ${fechaPeru} - ${horaPeru}\n` +
+          `━━━━━━━━━━━━━━━━━━━━`;
 
         whatsAppService.sendGroupMessage(mensajeWa).catch(() => {});
       }

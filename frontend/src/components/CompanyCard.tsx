@@ -144,6 +144,8 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
                 className={
                   resultado.estado === 'MODIFICADO_EXITOSO'
                     ? 'text-emerald-400 font-semibold flex items-center gap-1'
+                    : resultado.estado === 'SIN_COMPRAS'
+                    ? 'text-blue-400 font-semibold flex items-center gap-1'
                     : resultado.estado === 'SIN_MODIFICACIONES' || resultado.estado === 'COMPLETADO' || resultado.estado === 'EN_CERO'
                     ? 'text-emerald-400 font-semibold flex items-center gap-1'
                     : 'text-amber-400'
@@ -151,7 +153,9 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>
-                  {resultado.estado === 'SIN_MODIFICACIONES'
+                  {resultado.estado === 'SIN_COMPRAS'
+                    ? 'Sin Compras (Mes Limpio)'
+                    : resultado.estado === 'SIN_MODIFICACIONES'
                     ? 'En 0.00 (Correcto)'
                     : resultado.estado === 'MODIFICADO_EXITOSO'
                     ? 'Modificado a 0.00'
@@ -159,7 +163,11 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
                 </span>
               </span>
             </div>
-            {resultado.comprobantesModificados && resultado.comprobantesModificados.length > 0 ? (
+            {resultado.estado === 'SIN_COMPRAS' ? (
+              <p className="mt-1 text-[11px] text-blue-300/90">
+                La entidad no cuenta con comprobantes de compras en este mes.
+              </p>
+            ) : resultado.comprobantesModificados && resultado.comprobantesModificados.length > 0 ? (
               <p className="mt-1 text-[11px] text-slate-400">
                 Ajustados a 0.00: <strong className="text-emerald-300">{resultado.comprobantesModificados.length}</strong> comprobantes.
               </p>

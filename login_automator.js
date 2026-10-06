@@ -873,24 +873,87 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
 
       // Esperar a que la tabla cargue activamente los datos de la Propuesta (desaparezca spinner y existan filas)
       onLog("Esperando carga completa de los datos de la Propuesta del RCE...");
+      let esPropuestaVaciaSinCompras = false;
       for (let waitTabla = 0; waitTabla < 20; waitTabla++) {
         let tablaLista = false;
         for (const f of [targetFrame, activeSireFrame, page, ...page.frames()]) {
-          tablaLista = await f.evaluate(() => {
+          const resEstado = await f.evaluate(() => {
             const spinner = document.querySelector('.spinner-border, .loading, .block-ui-spinner, .sk-spinner');
-            if (spinner && spinner.offsetParent !== null) return false;
+            if (spinner && spinner.offsetParent !== null) return null;
             const filas = Array.from(document.querySelectorAll('table tbody tr'));
             const filasValidas = filas.filter(tr => !tr.classList.contains('total') && !tr.querySelector('th') && !tr.closest('tfoot'));
-            const mensajeVacio = (document.body ? document.body.innerText : '').includes('No se encontraron registros');
-            return filasValidas.length > 0 || mensajeVacio;
-          }).catch(() => false);
-          if (tablaLista) {
+            const bodyText = (document.body ? document.body.innerText : '');
+            const mensajeVacio = bodyText.includes('No se encontraron registros') || 
+                                 bodyText.includes('No cuenta con compras') || 
+                                 bodyText.includes('No existe información') ||
+                                 bodyText.includes('No existen comprobantes');
+            if (filasValidas.length > 0) return { tipo: 'DATOS', filas: filasValidas.length };
+            if (mensajeVacio) return { tipo: 'VACIO', filas: 0 };
+            return null;
+          }).catch(() => null);
+
+          if (resEstado) {
             targetFrame = f;
+            tablaLista = true;
+            if (resEstado.tipo === 'VACIO') {
+              esPropuestaVaciaSinCompras = true;
+            }
             break;
           }
         }
         if (tablaLista) break;
         await page.waitForTimeout(600);
+      }
+
+      // =========================================================================
+      // CASO ESPECIAL: EMPRESA O PERSONA NATURAL SIN COMPRAS EN EL PERIODO
+      // =========================================================================
+      if (esPropuestaVaciaSinCompras) {
+        onLog(`📦 ATENCIÓN: El contribuyente ${ruc} NO cuenta con compras o comprobantes registrados en el periodo ${periodoMes} ${periodoAnio}.`);
+        
+        const registroSinCompras = {
+          ruc,
+          periodo: { anio: periodoAnio, mes: mesCodigo || periodoMes },
+          fechaHora: new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' }),
+          totalComprobantes: 0,
+          avisoSunat: `No cuenta con compras en el mes de ${periodoMes}`,
+          estado: 'SIN_COMPRAS',
+          mensaje: `La empresa / persona natural no cuenta con compras registradas en el mes de ${periodoMes} de ${periodoAnio}`,
+          comprobantesModificados: []
+        };
+
+        try {
+          const jsonPath = path.join(__dirname, 'registro_rce_resultados.json');
+          let dataJson = [];
+          if (fs.existsSync(jsonPath)) {
+            try { dataJson = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) || []; } catch(e) { dataJson = []; }
+          }
+          const idxEx = dataJson.findIndex(it => it.ruc === ruc && it.periodo?.anio === periodoAnio && (it.periodo?.mes === mesCodigo || it.periodo?.mes === periodoMes));
+          if (idxEx !== -1) dataJson[idxEx] = registroSinCompras;
+          else dataJson.push(registroSinCompras);
+          fs.writeFileSync(jsonPath, JSON.stringify(dataJson, null, 2), 'utf8');
+          onLog(`💾 Resultado guardado como 'SIN_COMPRAS' en registro_rce_resultados.json`);
+        } catch(e) {}
+
+        // Salir de SUNAT directamente
+        onLog("Presionando el botón 'Salir' en la parte superior derecha...");
+        for (const f of [page, ...page.frames()]) {
+          await f.evaluate(() => {
+            const btn = document.getElementById('btnSalir') || document.querySelector('.aOpcionSalir, button.aOpcionSalir');
+            if (btn) btn.click();
+          }).catch(() => {});
+        }
+        await page.waitForTimeout(1000);
+        await page.close().catch(() => {});
+        await browser.close().catch(() => {});
+        onLog("✅ Proceso completado: Empresa sin compras finalizada.");
+        return {
+          success: true,
+          estado: 'SIN_COMPRAS',
+          totalComprobantes: 0,
+          comprobantesModificados: [],
+          message: `No cuenta con compras en el mes de ${periodoMes}`
+        };
       }
 
       // =========================================================================
@@ -1512,6 +1575,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       }
 
       // Estructura de auditoría y respaldo detallado
+      const esSinCompras = totalComprobantesAuditados === 0;
       registroFinal = {
         ruc,
         periodo: {
@@ -1520,12 +1584,18 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         },
         fechaHora: new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' }),
         totalComprobantes: totalComprobantesAuditados,
-        avisoSunat: "Modificación y verificación de propuesta RCE",
-        estado: comprobantesModificadosGlobal.length === 0 ? 'SIN_MODIFICACIONES' : 'MODIFICADO_EXITOSO',
+        avisoSunat: esSinCompras 
+          ? `No cuenta con compras en el mes de ${mes || 'el periodo'}` 
+          : "Modificación y verificación de propuesta RCE",
+        estado: esSinCompras 
+          ? 'SIN_COMPRAS' 
+          : (comprobantesModificadosGlobal.length === 0 ? 'SIN_MODIFICACIONES' : 'MODIFICADO_EXITOSO'),
         dobleVerificacionExitosa: verificacionFinal.pendientes === 0,
-        mensaje: comprobantesModificadosGlobal.length === 0 
-          ? 'Verificado con éxito: No requirió modificaciones (BI e IGV en 0.00)' 
-          : `Modificado y auditado: ${comprobantesModificadosGlobal.length} comprobante(s) ajustados a 0.00 con doble verificación conforme`,
+        mensaje: esSinCompras
+          ? `La empresa / persona natural no cuenta con compras registradas en el mes de ${mes || 'el periodo'}`
+          : (comprobantesModificadosGlobal.length === 0 
+            ? 'Verificado con éxito: No requirió modificaciones (BI e IGV en 0.00)' 
+            : `Modificado y auditado: ${comprobantesModificadosGlobal.length} comprobante(s) ajustados a 0.00 con doble verificación conforme`),
         comprobantesModificados: comprobantesModificadosGlobal
       };
 
