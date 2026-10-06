@@ -1190,6 +1190,24 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         totalComprobantesAuditados += evaluacionTabla.totalFilas;
         onLog(`📊 Página ${numeroPagina}: ${evaluacionTabla.totalFilas} registros encontrados. Comprobantes con saldo > 0.00: ${evaluacionTabla.filasAModificar.length}`);
 
+        // Telemetría de diagnóstico en consola para inspección en vivo de la estructura de SUNAT
+        if (evaluacionTabla.totalFilas > 0) {
+          const infoDiag = await targetFrame.evaluate((bIdx, gIdx) => {
+            const tr = document.querySelector('table tbody tr:not(.total)');
+            if (!tr) return null;
+            const celdas = Array.from(tr.querySelectorAll('td')).map(td => td.innerText ? td.innerText.trim() : '');
+            return {
+              doc: celdas[6] || celdas[5] || celdas[4] || 'N/A',
+              valorBi: bIdx !== -1 && celdas[bIdx] ? celdas[bIdx] : '0.00',
+              valorIgv: gIdx !== -1 && celdas[gIdx] ? celdas[gIdx] : '0.00'
+            };
+          }, evaluacionTabla.biIndex, evaluacionTabla.igvIndex).catch(() => null);
+
+          if (infoDiag) {
+            onLog(`🔎 [DIAGNÓSTICO EN VIVO] Col BI #${evaluacionTabla.biIndex}, Col IGV #${evaluacionTabla.igvIndex} | Muestra: ${infoDiag.doc} (BI: ${infoDiag.valorBi}, IGV: ${infoDiag.valorIgv})`);
+          }
+        }
+
         // Procesar comprobantes que requieran modificación en esta página
         if (evaluacionTabla.filasAModificar.length > 0) {
           // Modificamos el primer comprobante encontrado en la tanda
