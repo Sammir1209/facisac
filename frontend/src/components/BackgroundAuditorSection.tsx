@@ -116,14 +116,29 @@ export const BackgroundAuditorSection: React.FC<BackgroundAuditorSectionProps> =
     }
   }, [filterState, auditAnalysis]);
 
+  // Escanear todas las que NO estén verificadas aún en el periodo actual
   const handleStartFullScan = () => {
-    const listado = clientes.filter(c => !c.esRojo).map(c => ({
-      ...c,
-      anio: selectedYear,
-      mes: selectedMonth,
-      soloAuditar: true, // No modifica comprobantes, solo escanea la propuesta y totales en SUNAT
-    }));
-    onExecuteAuditScan(listado);
+    // Si ya tienen resultado verificado en 0.00 o sin compras, omitirlas para continuar desde donde se quedó
+    const pendientesDeAuditoria = clientes
+      .filter(c => !c.esRojo)
+      .filter(c => {
+        const r = resultados.get(c.ruc);
+        const yaVerificado = r && (r.estado === 'EN_CERO' || r.estado === 'SIN_MODIFICACIONES' || r.estado === 'SIN_COMPRAS' || r.estado === 'MODIFICADO_EXITOSO');
+        return !yaVerificado;
+      })
+      .map(c => ({
+        ...c,
+        anio: selectedYear,
+        mes: selectedMonth,
+        soloAuditar: true,
+      }));
+
+    if (pendientesDeAuditoria.length === 0) {
+      alert('¡Todas las empresas de tu cartera ya han sido escaneadas y verificadas!');
+      return;
+    }
+
+    onExecuteAuditScan(pendientesDeAuditoria);
   };
 
   const handleScanPendientesOnly = () => {
@@ -135,6 +150,12 @@ export const BackgroundAuditorSection: React.FC<BackgroundAuditorSectionProps> =
         mes: selectedMonth,
         soloAuditar: true,
       }));
+
+    if (pendientes.length === 0) {
+      alert('No hay empresas pendientes de verificación.');
+      return;
+    }
+
     onExecuteAuditScan(pendientes);
   };
 
@@ -159,21 +180,18 @@ export const BackgroundAuditorSection: React.FC<BackgroundAuditorSectionProps> =
           {/* Botones de Acción de Escaneo */}
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
             <button
-              onClick={handleScanPendientesOnly}
-              disabled={isScanning || auditAnalysis.stats.sinVerificar === 0}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl border border-indigo-500/40 bg-indigo-500/15 px-4 py-2.5 text-xs font-bold text-indigo-200 transition-all hover:bg-indigo-500/25 active:scale-95 disabled:opacity-40"
-            >
-              <Zap className="h-4 w-4 text-indigo-400" />
-              <span>Escanear No Verificadas ({auditAnalysis.stats.sinVerificar})</span>
-            </button>
-
-            <button
               onClick={handleStartFullScan}
-              disabled={isScanning || clientes.length === 0}
+              disabled={isScanning || auditAnalysis.stats.sinVerificar === 0}
               className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-500 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
             >
               <Play className="h-4 w-4 fill-white" />
-              <span>{isScanning ? 'Escaneando RUCs en SUNAT...' : `Escanear Todas (${auditAnalysis.stats.total})`}</span>
+              <span>
+                {isScanning 
+                  ? 'Escaneando RUCs en SUNAT...' 
+                  : auditAnalysis.stats.sinVerificar < auditAnalysis.stats.total && auditAnalysis.stats.sinVerificar > 0
+                  ? `Continuar Escaneo (${auditAnalysis.stats.sinVerificar} restantes)`
+                  : `Escanear Todas (${auditAnalysis.stats.total})`}
+              </span>
             </button>
           </div>
         </div>
