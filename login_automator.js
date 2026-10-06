@@ -1396,18 +1396,26 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
             let valorBiTrasladado = 0;
             let valorIgvTrasladado = 0;
 
+            const setInputValue = (el, val) => {
+              if (!el) return;
+              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+              if (nativeInputValueSetter) {
+                nativeInputValueSetter.call(el, val);
+              } else {
+                el.value = val;
+              }
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+              el.dispatchEvent(new Event('blur', { bubbles: true }));
+            };
+
             const transferir = (origen, destino) => {
               if (origen && destino) {
                 const val = (origen.value || '').trim();
                 const num = parseFloat(val.replace(/,/g, '')) || 0;
                 if (Math.abs(num) > 0.001) {
-                  destino.value = val;
-                  destino.dispatchEvent(new Event('input', { bubbles: true }));
-                  destino.dispatchEvent(new Event('change', { bubbles: true }));
-
-                  origen.value = '0.00';
-                  origen.dispatchEvent(new Event('input', { bubbles: true }));
-                  origen.dispatchEvent(new Event('change', { bubbles: true }));
+                  setInputValue(destino, val);
+                  setInputValue(origen, '0.00');
                   return num;
                 }
               }
