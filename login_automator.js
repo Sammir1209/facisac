@@ -34,20 +34,30 @@ function getPeriodoFiscalPorDefecto() {
  * Espera y maneja cualquier popup de SUNAT de forma robusta
  */
 async function handleMultiRucPopups(page, log) {
-  // Verificación y limpieza ultrarrápida de modales/avisos iniciales
-  for (let ciclo = 1; ciclo <= 3; ciclo++) {
+  // Verificación y limpieza profunda de modales/avisos iniciales de SUNAT
+  for (let ciclo = 1; ciclo <= 10; ciclo++) {
     let accionó = false;
-    const allFrames = page.frames();
+    const allFrames = [page, ...page.frames()];
 
     for (const frame of allFrames) {
       try {
-        // Ejecución inmediata en el DOM del frame para neutralizar "Ver más tarde", "Finalizar", "Continuar sin confirmar"
+        // Ejecución inmediata en el DOM del frame para neutralizar "Continuar sin confirmar", "Ver más tarde", "Finalizar", "Continuar sin código"
         const accionadoDOM = await frame.evaluate(() => {
-          // A) Buzón Electrónico: Botón 'Ver más tarde' (#btnCerrar o con callHide)
+          // A) Pantalla "Valida tus datos de contacto": Botón 'Continuar sin confirmar' o similares
+          const btnContSinConf = Array.from(document.querySelectorAll('button, input, a, div[role="button"]')).find(b => {
+            const t = ((b.innerText || b.value || b.textContent || '') + '').trim().toLowerCase();
+            return t.includes('continuar sin confirmar') || t.includes('sin confirmar') || t.includes('continuar sin valid');
+          });
+          if (btnContSinConf) {
+            btnContSinConf.click();
+            return 'CONTINUAR_SIN_CONFIRMAR';
+          }
+
+          // B) Buzón Electrónico: Botón 'Ver más tarde' (#btnCerrar o con callHide)
           const btnBuzon = document.getElementById('btnCerrar') 
             || document.querySelector('button[onclick*="callHide"], #btnCerrar')
             || Array.from(document.querySelectorAll('button, a')).find(b => {
-                 const t = (b.innerText || b.textContent || '').trim().toLowerCase();
+                 const t = ((b.innerText || b.textContent || '') + '').trim().toLowerCase();
                  return t.includes('ver más tarde') || t.includes('ver mas tarde') || t.includes('continuar más tarde') || t.includes('omitir');
                });
           if (btnBuzon) {
@@ -55,31 +65,21 @@ async function handleMultiRucPopups(page, log) {
             return 'BUZON';
           }
 
-          // B) Informativo con 'Finalizar'
+          // C) Informativo con 'Finalizar'
           const btnFin = Array.from(document.querySelectorAll('button, input, a')).find(b => {
-            const t = (b.innerText || b.value || b.textContent || '').trim().toLowerCase();
-            return t === 'finalizar';
+            const t = ((b.innerText || b.value || b.textContent || '') + '').trim().toLowerCase();
+            return t === 'finalizar' || t.includes('finalizar');
           });
           if (btnFin) {
             btnFin.click();
             return 'FINALIZAR';
           }
 
-          // C) Valida tus datos: 'Continuar sin confirmar'
-          const btnCont = Array.from(document.querySelectorAll('button, input, a')).find(b => {
-            const t = (b.innerText || b.value || b.textContent || '').trim().toLowerCase();
-            return t.includes('continuar sin confirmar') || t.includes('sin confirmar');
-          });
-          if (btnCont) {
-            btnCont.click();
-            return 'CONTINUAR_SIN';
-          }
-
           // D) Nuevo modal SUNAT: 'Continuar sin código' (#btnWithOutCode)
           const btnSinCodigo = document.getElementById('btnWithOutCode')
             || document.querySelector('button#btnWithOutCode, .btn-choice#btnWithOutCode')
             || Array.from(document.querySelectorAll('button, a')).find(b => {
-              const t = (b.innerText || b.textContent || '').trim().toLowerCase();
+              const t = ((b.innerText || b.textContent || '') + '').trim().toLowerCase();
               return t.includes('continuar sin código') || t.includes('continuar sin codigo') || t.includes('sin verificación adicional') || t.includes('sin verificacion adicional');
             });
           if (btnSinCodigo) {
@@ -87,17 +87,37 @@ async function handleMultiRucPopups(page, log) {
             return 'CONTINUAR_SIN_CODIGO';
           }
 
+          // E) Avisos genéricos con botón Entendido / Continuar / Aceptar
+          const btnAvisoGen = Array.from(document.querySelectorAll('.modal button, .ui-dialog button, ngb-modal-window button, [role="dialog"] button')).find(b => {
+            const t = ((b.innerText || b.textContent || '') + '').trim().toLowerCase();
+            return t === 'aceptar' || t === 'entendido' || t === 'continuar' || t === 'cerrar';
+          });
+          if (btnAvisoGen) {
+            btnAvisoGen.click();
+            return 'MODAL_GENERICO';
+          }
+
           return null;
         }).catch(() => null);
 
         if (accionadoDOM) {
-          log(`✅ Aviso detectado y cerrado vía DOM [Tipo: ${accionadoDOM}].`);
-          await page.waitForTimeout(400);
+          log(`✅ Aviso SUNAT neutralizado vía DOM [Tipo: ${accionadoDOM}].`);
+          await page.waitForTimeout(500);
           accionó = true;
           break;
         }
 
-        // 1. Nuevo modal SUNAT: Continuar sin código (#btnWithOutCode)
+        // 1. Pantalla "Valida tus datos de contacto": Continuar sin confirmar
+        const btnContinuarSin = frame.locator(`//button[contains(., 'Continuar sin confirmar') or contains(.,'sin confirmar')] | //input[contains(@value, 'sin confirmar')] | //a[contains(.,'Continuar sin confirmar')] | button:has-text("Continuar sin confirmar")`).first();
+        if (await btnContinuarSin.isVisible({ timeout: 200 }).catch(() => false)) {
+          await btnContinuarSin.click({ force: true });
+          log("✅ Modal 'Valida tus datos de contacto' (Continuar sin confirmar) cerrado.");
+          await page.waitForTimeout(500);
+          accionó = true;
+          break;
+        }
+
+        // 2. Nuevo modal SUNAT: Continuar sin código (#btnWithOutCode)
         const btnSinCodLoc = frame.locator(`button#btnWithOutCode, #btnWithOutCode, //button[contains(.,'Continuar sin código') or contains(.,'Continuar sin codigo')]`).first();
         if (await btnSinCodLoc.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnSinCodLoc.click({ force: true });
@@ -107,20 +127,12 @@ async function handleMultiRucPopups(page, log) {
           break;
         }
 
-        // 2. Popup "Informativo" con botón Finalizar
+        // 3. Popup "Informativo" con botón Finalizar
         const btnFinalizar = frame.locator(`//button[contains(.,'Finalizar') or contains(.,'finalizar')] | //input[@value='Finalizar'] | //a[contains(.,'Finalizar')]`).first();
         if (await btnFinalizar.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnFinalizar.click({ force: true });
+          log("✅ Aviso 'Finalizar' cerrado.");
           await page.waitForTimeout(400);
-          accionó = true;
-          break;
-        }
-
-        // 3. Pantalla "Valida tus datos de contacto": Continuar sin confirmar
-        const btnContinuarSin = frame.locator(`//button[contains(., 'Continuar sin confirmar') or contains(.,'sin confirmar')] | //input[contains(@value, 'sin confirmar')]`).first();
-        if (await btnContinuarSin.isVisible({ timeout: 200 }).catch(() => false)) {
-          await btnContinuarSin.click({ force: true });
-          await page.waitForTimeout(500);
           accionó = true;
           break;
         }
@@ -129,15 +141,17 @@ async function handleMultiRucPopups(page, log) {
         const btnDescarte = frame.locator(`button#btnCerrar, #btnCerrar, button[onclick*='callHide'], button:has-text('Ver más tarde'), button:has-text('Ver mas tarde')`).first();
         if (await btnDescarte.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnDescarte.click({ force: true });
+          log("✅ Buzón SOL 'Ver más tarde' descartado.");
           await page.waitForTimeout(400);
           accionó = true;
           break;
         }
 
-        // 4. Diálogo emergente
+        // 5. Diálogo emergente
         const btnAceptar = frame.locator(`.modal button:has-text("Aceptar"), ngb-modal-window button:has-text("Aceptar"), div[role='dialog'] button:has-text("Aceptar")`).first();
         if (await btnAceptar.isVisible({ timeout: 150 }).catch(() => false)) {
           await btnAceptar.click({ force: true });
+          log("✅ Diálogo modal 'Aceptar' cerrado.");
           await page.waitForTimeout(400);
           accionó = true;
           break;
@@ -146,7 +160,12 @@ async function handleMultiRucPopups(page, log) {
     }
 
     if (!accionó) {
-      break;
+      // Espera breve por si el modal tarda en renderizarse tras el login
+      if (ciclo <= 3) {
+        await page.waitForTimeout(600);
+      } else {
+        break;
+      }
     }
   }
   return true;
@@ -354,11 +373,20 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         for (const f of [page, ...page.frames()]) {
           empresasClickeado = await f.evaluate(() => {
             // Descartar de paso cualquier buzón o aviso que persista
+            const contSin = Array.from(document.querySelectorAll('button, input, a, div[role="button"]')).find(b => {
+              const t = ((b.innerText || b.value || b.textContent || '') + '').trim().toLowerCase();
+              return t.includes('continuar sin confirmar') || t.includes('sin confirmar');
+            });
+            if (contSin) contSin.click();
+
             const buzon = document.getElementById('btnCerrar') || document.querySelector('button[onclick*="callHide"]');
             if (buzon) buzon.click();
 
             const sinCod = document.getElementById('btnWithOutCode') || document.querySelector('button#btnWithOutCode, .btn-choice#btnWithOutCode');
             if (sinCod) sinCod.click();
+
+            const fin = Array.from(document.querySelectorAll('button, input')).find(b => ((b.innerText || b.value || '') + '').toLowerCase().includes('finalizar'));
+            if (fin) fin.click();
 
             const divEmp = document.querySelector('#divOpcionServicio2, [data-id="2"]');
             if (divEmp) {

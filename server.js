@@ -261,16 +261,23 @@ class QueueManager {
         let estadoLegible = '';
         let detalleAdicional = '';
 
+        // Conteo de comprobantes auditados y modificados
+        const totalAuditados = resultado.totalComprobantes ?? (resultado.comprobantesAuditados || 0);
+        const modificadosArray = Array.isArray(resultado.comprobantesModificados) ? resultado.comprobantesModificados : [];
+        const totalModificados = modificadosArray.length;
+
         if (resultado && resultado.estado === 'SIN_COMPRAS') {
           estadoLegible = '📦 *SIN COMPRAS REGISTRADAS*';
           detalleAdicional = `\n📢 _No cuenta con comprobantes de compras en el mes de ${periodoMes}._`;
         } else if (resultado && (resultado.estado === 'SIN_MODIFICACIONES' || resultado.estado === 'EN_CERO')) {
           estadoLegible = '🛡️ *Libros Verificados en 0.00* (Sin saldo pendiente)';
+          detalleAdicional = `\n📋 *Comprobantes Auditados:* ${totalAuditados}\n✏️ *Comprobantes Modificados:* 0 (Todos ya estaban en 0.00)`;
         } else if (resultado && resultado.estado === 'MODIFICADO_EXITOSO') {
-          const totalAjustados = resultado.comprobantesModificados?.length || 1;
-          estadoLegible = `✅ *Modificado a 0.00* (${totalAjustados} comprobante(s) ajustados)`;
+          estadoLegible = `✅ *Modificación Completada a 0.00*`;
+          detalleAdicional = `\n📋 *Comprobantes Auditados:* ${totalAuditados}\n✏️ *Comprobantes Modificados a 0.00:* ${totalModificados}`;
         } else {
           estadoLegible = `📋 ${resultado?.estado || 'Procesado'}`;
+          detalleAdicional = `\n📋 *Comprobantes Auditados:* ${totalAuditados}\n✏️ *Comprobantes Modificados:* ${totalModificados}`;
         }
 
         const ahoraPeru = new Date();
