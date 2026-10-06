@@ -37,9 +37,52 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
     }
   }, [logs]);
 
+  const [isMinimized, setIsMinimized] = React.useState(false);
+
   if (!isOpen) return null;
 
   const isTerminado = estado === 'COMPLETADO' || estado === 'ERROR' || estado === 'CANCELADO';
+
+  // Si está minimizado, mostrar widget flotante en la esquina inferior derecha
+  if (isMinimized) {
+    return (
+      <div 
+        onClick={() => setIsMinimized(false)}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-blue-500/40 bg-slate-900/95 p-3.5 shadow-2xl backdrop-blur-xl cursor-pointer hover:border-blue-400 hover:scale-105 transition-all select-none group"
+        title="Haz clic para volver a abrir la ventana en vivo"
+      >
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400 ring-1 ring-blue-500/40">
+          <Terminal className="h-5 w-5 animate-pulse" />
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
+              {empresaNombre || 'SUNAT SOL en curso'}
+            </span>
+            <span className="rounded bg-blue-500/20 px-1.5 py-0.2 text-[10px] font-bold text-blue-400">
+              {progreso}%
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-400 truncate max-w-[180px]">
+            {fase || 'Procesando en segundo plano...'}
+          </span>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMinimized(false);
+          }}
+          className="ml-2 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow hover:bg-blue-500 transition-all"
+        >
+          Maximizar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-in fade-in duration-200">
@@ -74,12 +117,31 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* Botón Minimizar (-) */}
+            <button
+              onClick={() => setIsMinimized(true)}
+              title="Minimizar (la tarea continúa en segundo plano sin cancelarse)"
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            >
+              <div className="h-0.5 w-3.5 bg-current rounded-full" />
+            </button>
+
+            {/* Botón Cerrar (X) - Minimiza si está activo para no interrumpir la automatización */}
+            <button
+              onClick={() => {
+                if (!isTerminado) {
+                  setIsMinimized(true);
+                } else {
+                  onClose();
+                }
+              }}
+              title={!isTerminado ? 'Minimizar a segundo plano' : 'Cerrar ventana'}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Barra de Progreso Dinámica */}

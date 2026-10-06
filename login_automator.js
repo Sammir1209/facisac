@@ -55,13 +55,16 @@ async function handleMultiRucPopups(page, log) {
 
           // B) Buzón Electrónico: Botón 'Ver más tarde' (#btnCerrar o con callHide)
           const btnBuzon = document.getElementById('btnCerrar') 
-            || document.querySelector('button[onclick*="callHide"], #btnCerrar')
-            || Array.from(document.querySelectorAll('button, a')).find(b => {
-                 const t = ((b.innerText || b.textContent || '') + '').trim().toLowerCase();
-                 return t.includes('ver más tarde') || t.includes('ver mas tarde') || t.includes('continuar más tarde') || t.includes('omitir');
+            || document.querySelector('button[onclick*="callHide"], #btnCerrar, a#btnCerrar')
+            || Array.from(document.querySelectorAll('button, a, input[type="button"]')).find(b => {
+                 const t = ((b.innerText || b.textContent || b.value || '') + '').trim().toLowerCase();
+                 return t.includes('ver más tarde') || t.includes('ver mas tarde') || t.includes('continuar más tarde') || t.includes('omitir') || t === 'cerrar';
                });
           if (btnBuzon) {
             btnBuzon.click();
+            // Si el contenedor del buzón persiste, forzar ocultamiento
+            const contBuzon = btnBuzon.closest('.modal, .ui-dialog, div[id*="buzon"], div[class*="buzon"], #divBuzon');
+            if (contBuzon) contBuzon.style.display = 'none';
             return 'BUZON';
           }
 
@@ -72,6 +75,8 @@ async function handleMultiRucPopups(page, log) {
           });
           if (btnFin) {
             btnFin.click();
+            const contFin = btnFin.closest('.modal, .ui-dialog');
+            if (contFin) contFin.style.display = 'none';
             return 'FINALIZAR';
           }
 
@@ -84,6 +89,8 @@ async function handleMultiRucPopups(page, log) {
             });
           if (btnSinCodigo) {
             btnSinCodigo.click();
+            const contSin = btnSinCodigo.closest('.modal, .ui-dialog');
+            if (contSin) contSin.style.display = 'none';
             return 'CONTINUAR_SIN_CODIGO';
           }
 
@@ -94,7 +101,22 @@ async function handleMultiRucPopups(page, log) {
           });
           if (btnAvisoGen) {
             btnAvisoGen.click();
+            const contAviso = btnAvisoGen.closest('.modal, .ui-dialog, ngb-modal-window');
+            if (contAviso) contAviso.style.display = 'none';
             return 'MODAL_GENERICO';
+          }
+
+          // F) DETECCIÓN DE NUEVOS COMPONENTES DESCONOCIDOS DE SUNAT
+          const nuevoDialogo = document.querySelector('.modal.show, ngb-modal-window, div[role="dialog"]:not([style*="display: none"])');
+          if (nuevoDialogo) {
+            const titulo = (nuevoDialogo.querySelector('h1, h2, h3, h4, h5, .modal-title')?.textContent || '').trim();
+            const texto = (nuevoDialogo.textContent || '').trim().substring(0, 150);
+            const botonCualquiera = nuevoDialogo.querySelector('button, a.btn, input[type="button"]');
+            if (botonCualquiera) {
+              botonCualquiera.click();
+              nuevoDialogo.style.display = 'none';
+              return `NUEVO_COMPONENTE_DETECTADO: [${titulo || 'Sin Titulo'}] ${texto}`;
+            }
           }
 
           return null;
@@ -102,7 +124,14 @@ async function handleMultiRucPopups(page, log) {
 
         if (accionadoDOM) {
           log(`✅ Aviso SUNAT neutralizado vía DOM [Tipo: ${accionadoDOM}].`);
-          await page.waitForTimeout(500);
+          // Si el buzón ya fue accionado en más de 2 ciclos consecutivos, remover elemento del DOM para no estancarse
+          if (accionadoDOM.includes('BUZON') && ciclo >= 2) {
+            await frame.evaluate(() => {
+              const el = document.getElementById('btnCerrar') || document.querySelector('div[id*="buzon"]');
+              if (el) el.remove();
+            }).catch(() => {});
+          }
+          await page.waitForTimeout(400);
           accionó = true;
           break;
         }
@@ -112,7 +141,7 @@ async function handleMultiRucPopups(page, log) {
         if (await btnContinuarSin.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnContinuarSin.click({ force: true });
           log("✅ Modal 'Valida tus datos de contacto' (Continuar sin confirmar) cerrado.");
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(400);
           accionó = true;
           break;
         }
@@ -122,7 +151,7 @@ async function handleMultiRucPopups(page, log) {
         if (await btnSinCodLoc.isVisible({ timeout: 200 }).catch(() => false)) {
           await btnSinCodLoc.click({ force: true });
           log("✅ Modal 'Continuar sin código' (#btnWithOutCode) clickeado.");
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(400);
           accionó = true;
           break;
         }
@@ -160,9 +189,8 @@ async function handleMultiRucPopups(page, log) {
     }
 
     if (!accionó) {
-      // Espera breve por si el modal tarda en renderizarse tras el login
-      if (ciclo <= 3) {
-        await page.waitForTimeout(600);
+      if (ciclo <= 2) {
+        await page.waitForTimeout(400);
       } else {
         break;
       }
