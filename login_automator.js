@@ -1427,21 +1427,38 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
         }
 
         let biIndex = headers.findIndex(h => {
-          const t = h.toUpperCase();
-          return t.includes('BI GRAVADO DG') || (t.includes('GRAVADO DG') && !t.includes('NO GRAV'));
+          const t = h.toUpperCase().replace(/\s+/g, ' ');
+          return (t.includes('BI') && t.includes('GRAV') && !t.includes('NO GRAV')) || 
+                 (t.includes('BASE') && t.includes('GRAV') && !t.includes('NO GRAV')) ||
+                 t === 'BI GRAVADO DG' || t === 'BI GRAVADA DG';
         });
 
         let igvIndex = headers.findIndex(h => {
-          const t = h.toUpperCase();
-          return t.includes('IGV / IPM DG') || t.includes('IGV/IPM DG') || (t.includes('IGV') && t.includes('DG') && !t.includes('NO GRAV'));
+          const t = h.toUpperCase().replace(/\s+/g, ' ');
+          return (t.includes('IGV') && !t.includes('NO GRAV') && (t.includes('DG') || t.includes('IPM'))) ||
+                 t === 'IGV / IPM DG' || t === 'IGV/IPM DG';
         });
+
+        if (biIndex === -1) {
+          headers.forEach((h, idx) => {
+            const t = h.toUpperCase();
+            if (t.includes('GRAV') && !t.includes('NO') && biIndex === -1) biIndex = idx;
+          });
+        }
+        if (igvIndex === -1 && biIndex !== -1) {
+          igvIndex = biIndex + 1;
+        }
 
         const filas = Array.from(document.querySelectorAll('table tbody tr'));
         let pendientes = 0;
+        let comprobantesValidos = 0;
 
         filas.forEach((fila) => {
+          if (fila.classList.contains('total') || fila.querySelector('th') || fila.closest('tfoot')) return;
           const celdas = Array.from(fila.querySelectorAll('td')).map(td => td.innerText ? td.innerText.trim() : '');
           if (celdas.length < 5) return;
+          comprobantesValidos++;
+
           const biVal = biIndex !== -1 && celdas[biIndex] ? parseFloat(celdas[biIndex].replace(/,/g, '')) || 0 : 0;
           const igvVal = igvIndex !== -1 && celdas[igvIndex] ? parseFloat(celdas[igvIndex].replace(/,/g, '')) || 0 : 0;
           if (Math.abs(biVal) > 0.001 || Math.abs(igvVal) > 0.001) {
@@ -1449,7 +1466,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           }
         });
 
-        return { pendientes, totalFilas: filas.length };
+        return { pendientes, totalFilas: comprobantesValidos };
       }).catch(() => ({ pendientes: 0, totalFilas: 0 }));
 
       if (verificacionFinal.pendientes > 0) {
