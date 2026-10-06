@@ -120,9 +120,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
       className={`relative z-40 flex flex-col shrink-0 border-r border-slate-800/80 bg-[#090d16]/95 backdrop-blur-xl h-screen select-none`}
     >
-      {/* Cabecera / Marca */}
-      <div className="flex h-18 items-center justify-between px-4 border-b border-slate-800/60 py-4">
-        <div className="flex items-center gap-3 overflow-hidden">
+      {/* Cabecera / Marca Limpia */}
+      <div className="flex h-18 items-center px-4 border-b border-slate-800/60 py-4.5">
+        <div className="flex items-center gap-3 overflow-hidden w-full">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 shadow-md shadow-blue-500/25 ring-1 ring-blue-400/30">
             <ShieldCheck className="h-5 w-5 text-white" />
           </div>
@@ -134,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.15 }}
-                className="flex flex-col whitespace-nowrap overflow-hidden"
+                className="flex flex-col whitespace-nowrap overflow-hidden flex-1"
               >
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-base tracking-tight text-white">
@@ -151,44 +151,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </AnimatePresence>
         </div>
-
-        {/* Botones de Anclar / Colapsar */}
-        {!isCollapsed && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={onTogglePin}
-              title={isPinned ? 'Desanclar barra lateral' : 'Anclar barra lateral fija'}
-              className={`p-1.5 rounded-lg border transition-all text-xs ${
-                isPinned
-                  ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {isPinned ? <Pin className="h-3.5 w-3.5" /> : <PinOff className="h-3.5 w-3.5" />}
-            </button>
-            <button
-              onClick={onToggleCollapse}
-              title="Cerrar barra lateral"
-              className="p-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Botón flotante para expandir si está colapsado */}
-      {isCollapsed && (
-        <div className="px-3 pt-3">
-          <button
-            onClick={onToggleCollapse}
-            title="Expandir barra lateral"
-            className="w-full flex justify-center items-center py-2 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      {/* Botón Flotante para Colapsar/Expandir en la línea del borde derecho */}
+      <button
+        onClick={onToggleCollapse}
+        title={isCollapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
+        className="absolute -right-3.5 top-1/2 -translate-y-1/2 z-50 flex h-7 w-7 items-center justify-center rounded-full border border-slate-700/80 bg-slate-900 text-slate-300 shadow-lg shadow-black/40 hover:border-blue-500 hover:bg-blue-600 hover:text-white transition-all active:scale-90"
+      >
+        {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+      </button>
 
       {/* Navegación por Secciones */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 custom-scrollbar">
@@ -277,13 +249,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onLogout}
-                title="Cerrar Sesión Segura"
-                className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onTogglePin}
+                  title={isPinned ? 'Desanclar barra lateral' : 'Anclar barra lateral fija'}
+                  className={`p-1.5 rounded-lg border transition-all ${
+                    isPinned
+                      ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
+                      : 'border-slate-800 bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {isPinned ? <Pin className="h-3.5 w-3.5" /> : <PinOff className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  onClick={onLogout}
+                  title="Cerrar Sesión Segura"
+                  className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ) : (
