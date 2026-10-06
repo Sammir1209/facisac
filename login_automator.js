@@ -1060,14 +1060,29 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           }
 
           let biIndex = headers.findIndex(h => {
-            const t = h.toUpperCase();
-            return t.includes('BI GRAVADO DG') || (t.includes('GRAVADO DG') && !t.includes('NO GRAV'));
+            const t = h.toUpperCase().replace(/\s+/g, ' ');
+            return (t.includes('BI') && t.includes('GRAV') && !t.includes('NO GRAV')) || 
+                   (t.includes('BASE') && t.includes('GRAV') && !t.includes('NO GRAV')) ||
+                   t === 'BI GRAVADO DG' || t === 'BI GRAVADA DG';
           });
 
           let igvIndex = headers.findIndex(h => {
-            const t = h.toUpperCase();
-            return t.includes('IGV / IPM DG') || t.includes('IGV/IPM DG') || (t.includes('IGV') && t.includes('DG') && !t.includes('NO GRAV'));
+            const t = h.toUpperCase().replace(/\s+/g, ' ');
+            return (t.includes('IGV') && !t.includes('NO GRAV') && (t.includes('DG') || t.includes('IPM'))) ||
+                   t === 'IGV / IPM DG' || t === 'IGV/IPM DG';
           });
+
+          // Si las cabeceras están agrupadas o en múltiples niveles, fallback por posición típica en SIRE RCE:
+          // Col 10/11 suele ser BI Gravado DG y Col 11/12 suele ser IGV DG
+          if (biIndex === -1) {
+            headers.forEach((h, idx) => {
+              const t = h.toUpperCase();
+              if (t.includes('GRAV') && !t.includes('NO') && biIndex === -1) biIndex = idx;
+            });
+          }
+          if (igvIndex === -1 && biIndex !== -1) {
+            igvIndex = biIndex + 1; // En SIRE la siguiente columna siempre es el IGV correspondiente
+          }
 
           const filas = Array.from(document.querySelectorAll('table tbody tr'));
           let filasAModificar = [];
@@ -1093,13 +1108,29 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
               igvVal = parseFloat(celdas[igvIndex].replace(/,/g, '')) || 0;
             }
 
+            // Si los índices no detectaron pero alguna celda numérica de las primeras columnas monetarias tiene monto:
+            if (Math.abs(biVal) < 0.001 && Math.abs(igvVal) < 0.001) {
+              // Chequear todas las celdas numéricas de la fila para ver si hay importes gravados positivos
+              for (let c = 8; c < Math.min(celdas.length, 16); c++) {
+                const parsed = parseFloat(celdas[c].replace(/,/g, '')) || 0;
+                if (Math.abs(parsed) > 0.001) {
+                  const headerCol = (headers[c] || '').toUpperCase();
+                  if (headerCol.includes('GRAV') && !headerCol.includes('NO')) {
+                    biVal = parsed;
+                    biIndex = c;
+                    break;
+                  }
+                }
+              }
+            }
+
             // Detectar montos pendientes tanto positivos como negativos (ej. Notas de Crédito con signo -)
             if (Math.abs(biVal) > 0.001 || Math.abs(igvVal) > 0.001) {
               filasAModificar.push({
                 indiceFila: index,
                 bi: biVal,
                 igv: igvVal,
-                documento: celdas[6] || celdas[5] || `Fila ${index + 1}`
+                documento: celdas[6] || celdas[5] || celdas[4] || `Fila ${index + 1}`
               });
             }
           });
