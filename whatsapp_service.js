@@ -104,18 +104,23 @@ class WhatsAppService {
           this.isConnected = false;
           this.isConnecting = false;
           const statusCode = lastDisconnect?.error?.output?.statusCode;
-          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+          const isTimeout = statusCode === 408;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut && !isTimeout;
 
           console.log(`[WA] Conexión cerrada (Motivo: ${statusCode}). ¿Reconectar?: ${shouldReconnect}`);
 
           if (shouldReconnect) {
-            setTimeout(() => this.init(), 4000);
+            setTimeout(() => this.init(), 5000);
           } else {
-            this.qrDataUrl = null;
-            // Limpiar auth si fue desconectado permanentemente
-            try {
-              fs.rmSync(AUTH_DIR, { recursive: true, force: true });
-            } catch (e) {}
+            // Si expiró el QR (408), pausamos reintentos infinitos en consola hasta que el usuario abra la app
+            if (isTimeout) {
+              console.log('[WA] Tiempo de espera del código QR agotado (408). Escanea desde el panel web cuando estés listo.');
+            } else {
+              this.qrDataUrl = null;
+              try {
+                fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+              } catch (e) {}
+            }
           }
         } else if (connection === 'open') {
           this.isConnected = true;
