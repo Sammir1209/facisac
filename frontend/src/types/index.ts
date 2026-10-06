@@ -29,6 +29,8 @@ export interface RegistroResultado {
   comprobantesModificados?: ComprobanteModificado[];
   fechaHora?: string;
   mensaje?: string;
+  avisoSunat?: string;
+  pendientesModificar?: number;
 }
 
 export interface QueueStatus {

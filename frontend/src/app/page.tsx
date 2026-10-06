@@ -21,7 +21,17 @@ import { Loader2, AlertCircle, LayoutGrid, Calendar as CalendarIcon } from 'luci
 import { AuthModal } from '@/components/AuthModal';
 import { API_BASE } from '@/lib/apiConfig';
 
+import { Sidebar, DashboardSection } from '@/components/Sidebar';
+import { RceModifierSection } from '@/components/RceModifierSection';
+import { BackgroundAuditorSection } from '@/components/BackgroundAuditorSection';
+import { ReportsSection } from '@/components/ReportsSection';
+
 export default function DashboardPage() {
+  // Estado de Navegación por Secciones del Dashboard
+  const [currentSection, setCurrentSection] = useState<DashboardSection>('cartera');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState<boolean>(true);
+
   // Estado de Autenticación de Usuario Local
   const [currentUser, setCurrentUser] = useState<{ name: string; username: string } | null>(() => {
     if (typeof window !== 'undefined') {
@@ -52,6 +62,7 @@ export default function DashboardPage() {
       } catch (e) {}
     }
   };
+
   // Estado de clientes y backend
   const {
     clientes,
@@ -90,7 +101,8 @@ export default function DashboardPage() {
   const [activeView, setActiveView] = useState<'grid' | 'calendar'>('grid');
   const [currentTab, setCurrentTab] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  // Periodo fiscal por defecto dinámico (mes vencido a declarar)
+
+  // Periodo fiscal por defecto dinámico
   const [selectedYear, setSelectedYear] = useState<string>(() => {
     const d = new Date();
     return d.getMonth() === 0 ? String(d.getFullYear() - 1) : String(d.getFullYear());
@@ -134,7 +146,7 @@ export default function DashboardPage() {
 
         const invalidas = data.resultados.filter((r: any) => !r.valido).length;
         if (invalidas > 0) {
-          alert(`Test completado: Se detectaron ${invalidas} empresas con Clave SOL incorrecta o no válida ante SUNAT.`);
+          alert(`Test completado: Se detectaron ${invalidas} empresas con Clave SOL incorrecta ante SUNAT.`);
         } else {
           alert('¡Test completado! Todas las Claves SOL consultadas son válidas y operativas.');
         }
@@ -149,7 +161,6 @@ export default function DashboardPage() {
   // Filtrado reactivo de clientes
   const filteredClientes = useMemo(() => {
     return clientes.filter((c) => {
-      // Filtro por término de búsqueda
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const matchRuc = c.ruc.toLowerCase().includes(query);
@@ -157,36 +168,28 @@ export default function DashboardPage() {
         if (!matchRuc && !matchRazon) return false;
       }
 
-      // Filtro por pestañas
       if (currentTab === 'auditados') {
         return resultados.has(c.ruc);
       }
-
       if (currentTab === 'pendientes') {
         return !resultados.has(c.ruc) && !c.esRojo;
       }
-
       if (currentTab === 'vence_pronto') {
         const v = calcularVencimientoSunat(c.ruc, c.regimenTributario, selectedYear, selectedMonth);
         return v.estadoAlerta === 'urgente' || v.estadoAlerta === 'proximo' || v.estadoAlerta === 'vencido';
       }
-
       if (currentTab === 'mype') {
         return (c.regimenTributario || '').toUpperCase().includes('MYPE');
       }
-
       if (currentTab === 'rer') {
         return (c.regimenTributario || '').toUpperCase().includes('ESPECIAL') || (c.regimenTributario || '').toUpperCase().includes('RER');
       }
-
       if (currentTab === 'general') {
         return (c.regimenTributario || '').toUpperCase().includes('GENERAL') || !c.regimenTributario;
       }
-
       if (currentTab === 'excluidos') {
         return !!c.esRojo;
       }
-
       return true;
     });
   }, [clientes, searchTerm, currentTab, selectedYear, selectedMonth, resultados]);
@@ -205,7 +208,8 @@ export default function DashboardPage() {
         if (
           res.estado === 'COMPLETADO' ||
           res.estado === 'MODIFICADO_EXITOSO' ||
-          res.estado === 'SIN_MODIFICACIONES'
+          res.estado === 'SIN_MODIFICACIONES' ||
+          res.estado === 'SIN_COMPRAS'
         ) {
           completadas++;
         }
@@ -213,6 +217,7 @@ export default function DashboardPage() {
           res.estado === 'SIN_MODIFICACIONES' ||
           res.estado === 'EN_CERO' ||
           res.estado === 'MODIFICADO_EXITOSO' ||
+          res.estado === 'SIN_COMPRAS' ||
           (res.comprobantesModificados && res.comprobantesModificados.length === 0)
         ) {
           enCero++;
@@ -221,11 +226,9 @@ export default function DashboardPage() {
     });
 
     const pendientes = Math.max(0, total - completadas - excluidas);
-
     return { total, pendientes, completadas, enCero, excluidas };
   }, [clientes, resultados]);
 
-  // Selección masiva de la lista filtrada
   const allSelected = useMemo(() => {
     if (filteredClientes.length === 0) return false;
     return filteredClientes.every((c) => selectedIds.has(c.id));
@@ -239,12 +242,10 @@ export default function DashboardPage() {
     }
   };
 
-  // Descarga del reporte Excel
   const handleExportExcel = () => {
     window.open(`${API_BASE}/api/rce/export-excel`, '_blank');
   };
 
-  // Disparar ejecución para los clientes seleccionados o filtrados
   const handleRunBatch = () => {
     const listado = selectedIds.size > 0
       ? clientes.filter((c) => selectedIds.has(c.id))
@@ -263,158 +264,227 @@ export default function DashboardPage() {
     });
   };
 
+  const handleRunAuditScan = (lista: Cliente[]) => {
+    executeBatch(lista, () => {
+      fetchResultados();
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col">
-      {/* 1. Barra de Navegación Global */}
-      <Navbar
-        onRefresh={() => {
-          fetchClientes();
-          fetchResultados();
+    <div className="min-h-screen bg-[#090d16] text-slate-100 flex overflow-x-hidden">
+      {/* Barra Lateral Navegación (Pinnable y Colapsable) */}
+      <Sidebar
+        currentSection={currentSection}
+        onSelectSection={(sec) => {
+          if (sec === 'whatsapp') {
+            setIsWhatsAppOpen(true);
+          } else {
+            setCurrentSection(sec);
+          }
         }}
-        onStopAll={stopAllQueue}
-        onExportExcel={handleExportExcel}
-        onOpenImportExcel={() => setIsExcelImportOpen(true)}
-        onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
-        onFastCheckSol={handleFastCheckSol}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isPinned={isSidebarPinned}
+        onTogglePin={() => setIsSidebarPinned(!isSidebarPinned)}
         currentUser={currentUser}
         onLogout={handleLogout}
-        isValidatingSol={isValidatingSol}
-        isStoppingAll={isExecuting}
+        pendingCount={kpiData.pendientes}
+        inZeroCount={kpiData.enCero}
+        isInspectingBackground={isExecuting}
       />
 
-      {/* Contenedor Principal */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-        {/* 2. Banner de Alertas de Vencimiento SUNAT */}
-        <AlertsBanner
-          clientes={clientes}
-          onFilterVencePronto={() => setCurrentTab('vence_pronto')}
+      {/* Área de Trabajo Principal */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        {/* Barra Superior Global */}
+        <Navbar
+          onRefresh={() => {
+            fetchClientes();
+            fetchResultados();
+          }}
+          onStopAll={stopAllQueue}
+          onExportExcel={handleExportExcel}
+          onOpenImportExcel={() => setIsExcelImportOpen(true)}
+          onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
+          onFastCheckSol={handleFastCheckSol}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          isValidatingSol={isValidatingSol}
+          isStoppingAll={isExecuting}
         />
 
-        {/* 3. Tarjetas Métricas KPI */}
-        <KpiMetrics
-          total={kpiData.total}
-          pendientes={kpiData.pendientes}
-          completadas={kpiData.completadas}
-          enCero={kpiData.enCero}
-          excluidas={kpiData.excluidas}
-        />
-
-        {/* 4. Barra de Periodo Global & Botón de Ejecución */}
-        <GlobalPeriodBar
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onChangeYear={setSelectedYear}
-          onChangeMonth={setSelectedMonth}
-          onRunSelected={handleRunBatch}
-          selectedCount={selectedIds.size}
-          totalFiltered={filteredClientes.length}
-          isExecuting={isExecuting}
-        />
-
-        {/* 5. Filtros por Régimen, Buscador y Conmutador de Vistas */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-end">
-            <div className="inline-flex rounded-xl bg-slate-900/80 border border-slate-800 p-1">
-              <button
-                onClick={() => setActiveView('grid')}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  activeView === 'grid'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" />
-                <span>Vista Cartera</span>
-              </button>
-              <button
-                onClick={() => setActiveView('calendar')}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  activeView === 'calendar'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <CalendarIcon className="h-3.5 w-3.5" />
-                <span>Vista Calendario SUNAT</span>
-              </button>
-            </div>
-          </div>
-
-          {activeView === 'grid' && (
-            <FilterTabs
-              currentTab={currentTab}
-              onSelectTab={setCurrentTab}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              totalFiltered={filteredClientes.length}
-              onSelectAll={handleToggleSelectAll}
-              allSelected={allSelected}
+        {/* Contenido Dinámico según la Sección Elegida */}
+        <main className="flex-1 px-4 py-6 sm:px-8 space-y-6 max-w-7xl w-full mx-auto">
+          {/* SECCIÓN 1: MODIFICAR RCE SIRE SUNAT */}
+          {currentSection === 'modificar_rce' && (
+            <RceModifierSection
+              clientes={clientes}
+              resultados={resultados}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onSelectAll={() => selectAll(clientes.filter(c => !c.esRojo).map(c => c.id))}
+              onDeselectAll={deselectAll}
+              onExecuteBatch={handleRunBatch}
+              onExecuteSingle={(c) => {
+                executeSingle({ ...c, anio: selectedYear, mes: selectedMonth }, () => fetchResultados());
+              }}
+              onOpenDetail={(c) => setActiveDetailClient(c)}
+              activeJobId={activeJobId}
+              isExecuting={isExecuting}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              onChangeYear={setSelectedYear}
+              onChangeMonth={setSelectedMonth}
             />
           )}
-        </div>
 
-        {/* 6. Vista Activa: Calendario o Grilla */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-3" />
-            <p className="text-sm font-medium">Sincronizando empresas con el servidor...</p>
-          </div>
-        ) : error ? (
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-6 text-center text-rose-300">
-            <AlertCircle className="h-8 w-8 mx-auto text-rose-400 mb-2" />
-            <p className="font-semibold">{error}</p>
-            <button
-              onClick={fetchClientes}
-              className="mt-3 rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-rose-500 transition-colors"
-            >
-              Reintentar Conexión
-            </button>
-          </div>
-        ) : activeView === 'calendar' ? (
-          <CalendarView
-            clientes={clientes}
-            resultados={resultados}
-            onSelectClient={(c) => setActiveDetailClient(c)}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-          />
-        ) : filteredClientes.length === 0 ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/40 py-16 text-center text-slate-400">
-            <p className="text-sm font-medium">No se encontraron empresas con los filtros aplicados.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredClientes.map((cliente) => (
-              <CompanyCard
-                key={cliente.id}
-                cliente={{
-                  ...cliente,
-                  anio: selectedYear,
-                  mes: selectedMonth,
-                }}
-                isSelected={selectedIds.has(cliente.id)}
-                onToggleSelect={() => toggleSelect(cliente.id)}
-                onOpenDetail={() => setActiveDetailClient(cliente)}
-                onExecuteSingle={() => {
-                  executeSingle(
-                    {
-                      ...cliente,
-                      anio: selectedYear,
-                      mes: selectedMonth,
-                    },
-                    () => {
-                      fetchResultados();
-                    }
-                  );
-                }}
-                isExecutingThis={isExecuting && activeClientName.includes(cliente.razonSocial)}
-                resultado={resultados.get(cliente.ruc)}
-                solStatus={solCheckResults.get(cliente.ruc)}
+          {/* SECCIÓN 2: AUDITOR DE RUCs EN SEGUNDO PLANO */}
+          {currentSection === 'auditoria_segundo_plano' && (
+            <BackgroundAuditorSection
+              clientes={clientes}
+              resultados={resultados}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              onExecuteAuditScan={handleRunAuditScan}
+              isScanning={isExecuting}
+              onOpenDetail={(c) => setActiveDetailClient(c)}
+            />
+          )}
+
+          {/* SECCIÓN 3: CALENDARIO TRIBUTARIO */}
+          {currentSection === 'calendario' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Cronograma Oficial SUNAT</h2>
+                  <p className="text-xs text-slate-400">Vencimientos ordenados por el último dígito del RUC</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-medium">Periodo Fiscal:</span>
+                  <span className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400">
+                    {selectedYear} - {selectedMonth}
+                  </span>
+                </div>
+              </div>
+              <CalendarView
+                clientes={clientes}
+                resultados={resultados}
+                onSelectClient={(c) => setActiveDetailClient(c)}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
               />
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+          )}
+
+          {/* SECCIÓN 4: REPORTES Y EVIDENCIAS */}
+          {currentSection === 'reportes' && (
+            <ReportsSection
+              clientes={clientes}
+              resultados={resultadosList}
+              onExportExcel={handleExportExcel}
+              onRefresh={fetchResultados}
+            />
+          )}
+
+          {/* SECCIÓN 5: PANEL GENERAL / CARTERA (VISTA INICIAL) */}
+          {currentSection === 'cartera' && (
+            <>
+              {/* Alertas de Vencimiento */}
+              <AlertsBanner
+                clientes={clientes}
+                onFilterVencePronto={() => setCurrentTab('vence_pronto')}
+              />
+
+              {/* KPIs de Control */}
+              <KpiMetrics
+                total={kpiData.total}
+                pendientes={kpiData.pendientes}
+                completadas={kpiData.completadas}
+                enCero={kpiData.enCero}
+                excluidas={kpiData.excluidas}
+              />
+
+              {/* Barra de Periodo Global & Botón de Ejecución */}
+              <GlobalPeriodBar
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+                onChangeYear={setSelectedYear}
+                onChangeMonth={setSelectedMonth}
+                onRunSelected={handleRunBatch}
+                selectedCount={selectedIds.size}
+                totalFiltered={filteredClientes.length}
+                isExecuting={isExecuting}
+              />
+
+              {/* Filtros por Régimen y Buscador */}
+              <div className="space-y-3">
+                <FilterTabs
+                  currentTab={currentTab}
+                  onSelectTab={setCurrentTab}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  totalFiltered={filteredClientes.length}
+                  onSelectAll={handleToggleSelectAll}
+                  allSelected={allSelected}
+                />
+              </div>
+
+              {/* Grilla de Clientes */}
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-3" />
+                  <p className="text-sm font-medium">Sincronizando empresas con el servidor...</p>
+                </div>
+              ) : error ? (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-6 text-center text-rose-300">
+                  <AlertCircle className="h-8 w-8 mx-auto text-rose-400 mb-2" />
+                  <p className="font-semibold">{error}</p>
+                  <button
+                    onClick={fetchClientes}
+                    className="mt-3 rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-rose-500 transition-colors"
+                  >
+                    Reintentar Conexión
+                  </button>
+                </div>
+              ) : filteredClientes.length === 0 ? (
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 py-16 text-center text-slate-400">
+                  <p className="text-sm font-medium">No se encontraron empresas con los filtros aplicados.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredClientes.map((cliente) => (
+                    <CompanyCard
+                      key={cliente.id}
+                      cliente={{
+                        ...cliente,
+                        anio: selectedYear,
+                        mes: selectedMonth,
+                      }}
+                      isSelected={selectedIds.has(cliente.id)}
+                      onToggleSelect={() => toggleSelect(cliente.id)}
+                      onOpenDetail={() => setActiveDetailClient(cliente)}
+                      onExecuteSingle={() => {
+                        executeSingle(
+                          {
+                            ...cliente,
+                            anio: selectedYear,
+                            mes: selectedMonth,
+                          },
+                          () => {
+                            fetchResultados();
+                          }
+                        );
+                      }}
+                      isExecutingThis={isExecuting && activeClientName.includes(cliente.razonSocial)}
+                      resultado={resultados.get(cliente.ruc)}
+                      solStatus={solCheckResults.get(cliente.ruc)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
 
       {/* 7. Modal de Ficha Individual de Empresa */}
       <CompanyDetailModal

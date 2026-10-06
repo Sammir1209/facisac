@@ -205,7 +205,7 @@ async function waitForMenuLoaded(page, log) {
 /**
  * Ejecución de un intento único
  */
-async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abortSignal, onBrowserCreated }, onLog) {
+async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, soloAuditar, abortSignal, onBrowserCreated }, onLog) {
   if (abortSignal && abortSignal.aborted) {
     throw new Error("Tarea cancelada antes de iniciar.");
   }
@@ -1325,6 +1325,54 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           }
         }
 
+        // Si el usuario solicitó solo inspeccionar/auditar en segundo plano (sin modificar comprobantes)
+        if (soloAuditar) {
+          onLog(`🔍 [MODO INSPECCIÓN] Comprobantes pendientes detectados: ${evaluacionTabla.filasAModificar.length}. No se realizarán ediciones.`);
+          // Extraer totales actuales y retornar estado
+          const estadoAuditoria = evaluacionTabla.filasAModificar.length === 0 ? 'EN_CERO' : 'PENDIENTE_MODIFICAR';
+          const registroAuditoria = {
+            ruc,
+            periodo: { anio: periodoAnio, mes: mesCodigo || periodoMes },
+            fechaHora: new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' }),
+            totalComprobantes: evaluacionTabla.totalFilas,
+            avisoSunat: estadoAuditoria === 'EN_CERO' ? 'Propuesta ya en 0.00' : `${evaluacionTabla.filasAModificar.length} comprobantes con saldo por modificar`,
+            estado: estadoAuditoria,
+            mensaje: estadoAuditoria === 'EN_CERO' ? 'Propuesta RCE ya se encuentra en 0.00' : `Se detectaron ${evaluacionTabla.filasAModificar.length} comprobantes pendientes de llevar a 0.00`,
+            comprobantesModificados: [],
+            pendientesModificar: evaluacionTabla.filasAModificar.length
+          };
+
+          try {
+            const jsonPath = path.join(__dirname, 'registro_rce_resultados.json');
+            let dataJson = [];
+            if (fs.existsSync(jsonPath)) {
+              try { dataJson = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) || []; } catch(e) { dataJson = []; }
+            }
+            const idxEx = dataJson.findIndex(it => it.ruc === ruc && it.periodo?.anio === periodoAnio && (it.periodo?.mes === mesCodigo || it.periodo?.mes === periodoMes));
+            if (idxEx !== -1) dataJson[idxEx] = registroAuditoria;
+            else dataJson.push(registroAuditoria);
+            fs.writeFileSync(jsonPath, JSON.stringify(dataJson, null, 2), 'utf8');
+          } catch(e) {}
+
+          // Salir y cerrar
+          for (const f of [page, ...page.frames()]) {
+            await f.evaluate(() => {
+              const btn = document.getElementById('btnSalir') || document.querySelector('.aOpcionSalir, button.aOpcionSalir');
+              if (btn) btn.click();
+            }).catch(() => {});
+          }
+          await page.waitForTimeout(1000);
+          await page.close().catch(() => {});
+          await browser.close().catch(() => {});
+          return {
+            success: true,
+            estado: estadoAuditoria,
+            totalComprobantes: evaluacionTabla.totalFilas,
+            comprobantesModificados: [],
+            message: registroAuditoria.mensaje
+          };
+        }
+
         // Procesar comprobantes que requieran modificación en esta página
         if (evaluacionTabla.filasAModificar.length > 0) {
           // Modificamos el primer comprobante encontrado en la tanda
@@ -1889,7 +1937,7 @@ async function ejecutarPaso1Login(credenciales, onLog = console.log, options = {
       if (intento > 1) {
         onLog(`🔄 Reintentando proceso completo (Intento ${intento}/${MAX_INTENTOS})...`);
       }
-      return await ejecutarIntento({ ...credenciales, abortSignal, onBrowserCreated }, onLog);
+      return await ejecutarIntento({ ...credenciales, soloAuditar: credenciales.soloAuditar || options.soloAuditar, abortSignal, onBrowserCreated }, onLog);
     } catch (err) {
       if (abortSignal && abortSignal.aborted) {
         throw new Error("Tarea cancelada por el usuario.");

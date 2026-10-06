@@ -214,7 +214,8 @@ class QueueManager {
         usuario: job.cliente.usuario,
         clave: job.cliente.clave,
         anio: periodoAnio,
-        mes: periodoMes
+        mes: periodoMes,
+        soloAuditar: !!job.cliente.soloAuditar
       }, updateLog, {
         abortSignal: job.abortController.signal,
         onBrowserCreated: (browser) => {
