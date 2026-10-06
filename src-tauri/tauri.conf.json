@@ -4,10 +4,7 @@
   "version": "1.0.0",
   "identifier": "com.facisac.sistemas",
   "build": {
-    "frontendDist": "../frontend/out",
-    "devUrl": "http://localhost:3001",
-    "beforeDevCommand": "npm --prefix frontend run dev",
-    "beforeBuildCommand": "npm --prefix frontend run build"
+    "frontendDist": "../frontend/out"
   },
   "app": {
     "windows": [
