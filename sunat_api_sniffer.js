@@ -58,6 +58,22 @@ class SunatApiSniffer {
           postData: postData ? (postData.length > 5000 ? postData.substring(0, 5000) + '...[truncado]' : postData) : null
         };
 
+        // Registro y telemetría de endpoints relevantes de SIRE y SOL
+        if (url.includes('api-sire') || url.includes('clientessol') || url.includes('migeigv') || url.includes('libros')) {
+          const endpointPath = url.replace('https://api-sire.sunat.gob.pe', '').replace('https://api-seguridad.sunat.gob.pe', '').split('?')[0];
+          let detallePost = '';
+          if (method === 'POST' && postData) {
+            try {
+              const parsed = JSON.parse(postData);
+              const keys = Object.keys(parsed).slice(0, 4).join(', ');
+              detallePost = ` [Payload: {${keys}...}]`;
+            } catch (e) {
+              detallePost = ` [Payload: ${postData.substring(0, 40)}...]`;
+            }
+          }
+          onLog(`📡 [API ${method}] ${endpointPath}${detallePost}`);
+        }
+
         this.capturedRequests.push(reqRecord);
       }
     };
@@ -66,13 +82,17 @@ class SunatApiSniffer {
       const url = response.url();
       const status = response.status();
 
-      if (url.includes('sunat.gob.pe') && status === 200) {
+      if (url.includes('sunat.gob.pe')) {
         try {
           const contentType = response.headers()['content-type'] || '';
           if (contentType.includes('application/json')) {
             const body = await response.json().catch(() => null);
             if (body) {
-              onLog(`[SNIFFER] 📦 JSON capturado: ${url.split('?')[0]}`);
+              const endpointPath = url.replace('https://api-sire.sunat.gob.pe', '').replace('https://api-seguridad.sunat.gob.pe', '').split('?')[0];
+              if (url.includes('api-sire') || url.includes('clientessol') || url.includes('migeigv')) {
+                const totalItems = Array.isArray(body) ? ` (${body.length} items)` : (body.registros ? ` (${body.registros.length} registros)` : '');
+                onLog(`📥 [RESPUESTA ${status}] ${endpointPath}${totalItems}`);
+              }
               this.apiEndpoints[url] = {
                 status,
                 sampleResponse: body
