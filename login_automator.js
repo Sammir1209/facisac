@@ -869,7 +869,29 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       }
 
       onLog("Pestaña 'Propuesta del RCE' seleccionada.");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
+
+      // Esperar a que la tabla cargue activamente los datos de la Propuesta (desaparezca spinner y existan filas)
+      onLog("Esperando carga completa de los datos de la Propuesta del RCE...");
+      for (let waitTabla = 0; waitTabla < 20; waitTabla++) {
+        let tablaLista = false;
+        for (const f of [targetFrame, activeSireFrame, page, ...page.frames()]) {
+          tablaLista = await f.evaluate(() => {
+            const spinner = document.querySelector('.spinner-border, .loading, .block-ui-spinner, .sk-spinner');
+            if (spinner && spinner.offsetParent !== null) return false;
+            const filas = Array.from(document.querySelectorAll('table tbody tr'));
+            const filasValidas = filas.filter(tr => !tr.classList.contains('total') && !tr.querySelector('th') && !tr.closest('tfoot'));
+            const mensajeVacio = (document.body ? document.body.innerText : '').includes('No se encontraron registros');
+            return filasValidas.length > 0 || mensajeVacio;
+          }).catch(() => false);
+          if (tablaLista) {
+            targetFrame = f;
+            break;
+          }
+        }
+        if (tablaLista) break;
+        await page.waitForTimeout(600);
+      }
 
       // =========================================================================
       // FASE 3: LÓGICA DE NEGOCIO (RCE_Data_Shifter) A MÁXIMA VELOCIDAD (100 EN 100)
@@ -877,12 +899,16 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       onLog("➡️ INICIANDO FASE 3: Verificando totales generales de la Propuesta del RCE...");
 
       // VERIFICACIÓN INMEDIATA DE TOTALES GENERALES (SHORT-CIRCUIT INTELIGENTE)
-      // Si el total acumulado de BI Gravada e IGV Gravado ya está en 0.00, no es necesario recorrer páginas
+      // Solo es válido si la tabla contiene filas reales o tfoot con totales confirmados
       let totalGeneralCero = false;
       for (let chk = 0; chk < 3; chk++) {
         totalGeneralCero = await targetFrame.evaluate(() => {
           const table = document.querySelector('table');
           if (!table) return false;
+
+          // Verificar que haya filas de datos o mensaje explícito
+          const filasBody = Array.from(table.querySelectorAll('tbody tr')).filter(r => !r.classList.contains('total') && !r.closest('tfoot'));
+          if (filasBody.length === 0) return false;
 
           // Buscar fila de totales en tfoot o en filas con clase 'total' o que contengan 'Total'
           const rows = Array.from(table.querySelectorAll('tfoot tr, tr.total, tbody tr'));
@@ -919,7 +945,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
 
           // Si ambos totales son 0.00
           if (Math.abs(sumBi) < 0.001 && Math.abs(sumIgv) < 0.001) {
-            return { esCero: true, sumBi, sumIgv };
+            return { esCero: true, sumBi, sumIgv, totalFilas: filasBody.length };
           }
           return false;
         }).catch(() => false);
@@ -937,7 +963,7 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
           ruc,
           periodo: { anio: anio || '2026', mes: mesCodigo || 'AGO' },
           fechaHora: new Date().toLocaleString(),
-          totalComprobantes: 0,
+          totalComprobantes: totalGeneralCero.totalFilas || 0,
           avisoSunat: "Propuesta RCE ya se encuentra en 0.00",
           estado: 'SIN_MODIFICACIONES',
           mensaje: 'Propuesta verificada: Totales generales de BI Gravado e IGV Gravado ya están en 0.00',
@@ -1414,7 +1440,17 @@ async function ejecutarIntento({ ruc, usuario, clave, anio, mes, soloLogin, abor
       // PROTOCOLO DE MÁXIMA SEGURIDAD: DOBLE VERIFICACIÓN FINAL (0.00 OBLIGATORIO)
       // =========================================================================
       onLog("🔍 EJECUTANDO PROTOCOLO DE SEGURIDAD: Doble verificación final de saldos en 0.00...");
-      await page.waitForTimeout(1500);
+
+      // Volver a la primera página si estábamos en una página avanzada para auditar desde el inicio
+      await targetFrame.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button, a, .page-link'));
+        const btnPrimero = btns.find(b => {
+          const t = (b.innerText || b.textContent || '').trim();
+          return t === '1' || t === 'Primera' || t === 'Inicio';
+        });
+        if (btnPrimero) btnPrimero.click();
+      }).catch(() => {});
+      await page.waitForTimeout(1200);
 
       const verificacionFinal = await targetFrame.evaluate(() => {
         const theadRows = Array.from(document.querySelectorAll('table thead tr'));
