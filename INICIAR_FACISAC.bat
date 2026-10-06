@@ -15,11 +15,20 @@ if %errorLevel% == 0 (
     echo [i] Modo estándar de usuario.
 )
 
+cd /d "%~dp0"
+
+echo [*] Verificando dependencias nativas...
+if not exist "WebView2Loader.dll" (
+    if exist "src-tauri\target\release\WebView2Loader.dll" (
+        copy /y "src-tauri\target\release\WebView2Loader.dll" "WebView2Loader.dll" >nul
+    )
+)
+
 echo [*] Levantando el motor de automatización local (Node.js)...
 start /min "FACISAC_MOTOR" node server.js
 
 echo [*] Abriendo la aplicación de escritorio FACISAC - SISTEMAS...
-start "" "FACISAC-SISTEMAS.exe"
+start "" "%~dp0FACISAC-SISTEMAS.exe"
 
 echo.
 echo [+] ¡Sistema iniciado con éxito!
